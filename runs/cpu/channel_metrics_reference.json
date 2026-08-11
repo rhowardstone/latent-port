@@ -1,0 +1,72 @@
+{
+  "source_entropy_bits": 160.0,
+  "chars": 32,
+  "channels": {
+    "identity@0.0": {
+      "packet_exact": 1.0,
+      "symbol_error": 0.0,
+      "bit_error": 0.0,
+      "goodput_bits_per_slot": 10.0,
+      "bsc_equiv_bits_per_slot": 10.0,
+      "source_entropy_bits": 160.0,
+      "mean_nll_bits": 0.0,
+      "i_var_bits_per_message": 160.0,
+      "below_prior": false
+    },
+    "bsc@0.05": {
+      "packet_exact": 0.205,
+      "symbol_error": 0.0503125,
+      "bit_error": 0.025734375,
+      "goodput_bits_per_slot": 2.05,
+      "bsc_equiv_bits_per_slot": 8.274734112820859,
+      "source_entropy_bits": 160.0,
+      "mean_nll_bits": 8.05,
+      "i_var_bits_per_message": 151.95,
+      "below_prior": false
+    },
+    "bsc@0.2": {
+      "packet_exact": 0.0025,
+      "symbol_error": 0.195234375,
+      "bit_error": 0.099953125,
+      "goodput_bits_per_slot": 0.025,
+      "bsc_equiv_bits_per_slot": 5.311530142586314,
+      "source_entropy_bits": 160.0,
+      "mean_nll_bits": 31.2375,
+      "i_var_bits_per_message": 128.7625,
+      "below_prior": false
+    },
+    "erasure@0.1": {
+      "packet_exact": 0.04,
+      "symbol_error": 0.697578125,
+      "bit_error": 0.410140625,
+      "goodput_bits_per_slot": 0.4,
+      "bsc_equiv_bits_per_slot": 0.2342574928230845,
+      "source_entropy_bits": 160.0,
+      "mean_nll_bits": 111.6125,
+      "i_var_bits_per_message": 48.3875,
+      "below_prior": false
+    },
+    "dropout@0.1": {
+      "packet_exact": 0.8975,
+      "symbol_error": 0.1025,
+      "bit_error": 0.1025,
+      "goodput_bits_per_slot": 8.975,
+      "bsc_equiv_bits_per_slot": 5.231293210548174,
+      "source_entropy_bits": 160.0,
+      "mean_nll_bits": 16.4,
+      "i_var_bits_per_message": 143.6,
+      "below_prior": false
+    },
+    "transpose@0.3": {
+      "packet_exact": 0.0,
+      "symbol_error": 0.43625,
+      "bit_error": 0.22640625,
+      "goodput_bits_per_slot": 0.0,
+      "bsc_equiv_bits_per_slot": 2.283062080103766,
+      "source_entropy_bits": 160.0,
+      "mean_nll_bits": 69.8,
+      "i_var_bits_per_message": 90.2,
+      "below_prior": false
+    }
+  }
+}

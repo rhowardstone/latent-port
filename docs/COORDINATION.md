@@ -27,9 +27,9 @@ nodes' notebooks, not the primary GPU path.
 | Lane | Owner | Deliverable |
 |---|---|---|
 | GPU experiments: binding control, LP-5a, LP-3b, Fisher-spectrum, LP-4 real | **A100 node** | `runs/` artifacts + integration |
-| Shared metrics **library** `visual_encoder/channel_metrics.py` (`I_var` for LP-1, `ΔI` paired-gain for LP-2, bootstrap CIs, synthetic known-channel oracle) + `tests/test_channel_metrics.py` | **CPU node B** | tested module + `runs/cpu/*_reference.json` |
+| Shared metrics **library** `visual_encoder/channel_metrics.py` | **A100 node (DONE)** | landed + synthetic-validated (`runs/cpu/channel_metrics_reference.json`); GPU wiring of teacher-forced NLL lands with the binding run |
+| `role_geometry.py` lab + wiretap-faithfulness harness + canonical-bus toy (synthetic first) | **CPU node B** | modules + `runs/cpu/*.json` |
 | `notebooks/` + Colab job harness + LP-4 macro-step experiment design/spec | **CPU node A** | notebooks that CALL the library |
-| `role_geometry.py` lab, wiretap-faithfulness harness, canonical-bus toy (synthetic first) | **CPU node B** | modules + notebooks |
 | Fisher-spectrum estimation code (JVP/Lanczos) | A100 node (needs real receiver) | after binding/LP-5a |
 
 **Rules.** (1) One owner per file. (2) Notebooks *orchestrate* tested library
