@@ -29,14 +29,35 @@ from .text_baseline import levenshtein
 from .text_bridge import TRAIN_TEMPLATES, load_snippets, synthetic_chat
 
 
+def load_passages(brain, max_tokens, split):
+    """Coherent passages: concatenate CONTIGUOUS wikitext lines (broken at article
+    headers) up to max_tokens. Contiguous = coherent, unlike random concatenation
+    which is artificially hard and stalls training."""
+    from datasets import load_dataset
+
+    rows = load_dataset("wikitext", "wikitext-2-raw-v1", split=split)["text"]
+    passages, cur = [], ""
+    for row in rows:
+        row = " ".join(row.split())
+        if not row or row.startswith("="):
+            if len(cur) > 30:
+                passages.append(cur.strip())
+            cur = ""
+            continue
+        cur = (cur + " " + row).strip()
+        if len(brain.tokenizer(cur, add_special_tokens=False).input_ids) >= max_tokens:
+            passages.append(cur.strip()); cur = ""
+    if len(cur) > 30:
+        passages.append(cur.strip())
+    return passages
+
+
 def wide_messages(brain, base, window, rng, n):
-    """Concatenate snippets into messages that roughly fill one `window`-token picture."""
+    """One coherent passage truncated to fill a `window`-token picture."""
     out = []
     for _ in range(n):
-        msg, target = "", int(rng.integers(window // 2, window + 1))
-        while len(brain.tokenizer(msg, add_special_tokens=False).input_ids) < target:
-            msg = (msg + " " + base[int(rng.integers(0, len(base)))]).strip()
-        ids = brain.tokenizer(msg, add_special_tokens=False).input_ids[:window]
+        p = base[int(rng.integers(0, len(base)))]
+        ids = brain.tokenizer(p, add_special_tokens=False).input_ids[:window]
         out.append(brain.tokenizer.decode(ids, skip_special_tokens=True).strip())
     return [m for m in out if m]
 
@@ -100,8 +121,9 @@ def main() -> None:
     bridge = GatherBridge(brain.width, d_model, args.slots, args.window // args.slots, embed_rms, offset=0).to(args.device).train()
     batcher = PortBatcher(model, tokenizer, args.slots, args.device, message=TRAIN_TEMPLATES[0])
 
-    train, val = load_snippets(brain, limit_tokens=48)
-    train = train + synthetic_chat(np.random.default_rng(args.seed + 1), len(train))
+    train = load_passages(brain, args.window, "train")
+    val = load_passages(brain, args.window, "validation")
+    print(f"passages: {len(train)} train / {len(val)} val (coherent, up to {args.window} tok)", flush=True)
     # calibrate per-dim stats on a wide batch
     bridge.calibrate(*(lambda s, m: (s * m.unsqueeze(-1), m))(*brain.read(
         wide_messages(brain, train, args.window, np.random.default_rng(args.seed), 64), pad_to=args.window)))

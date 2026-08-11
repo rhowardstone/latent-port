@@ -1,0 +1,70 @@
+{
+  "experiment": "LP-3b bidirectional self-port",
+  "provenance": {
+    "git_sha": "cfc140222381112f8de1990b231bc6bcfcbaa5cc-dirty",
+    "timestamp_utc": "2026-08-11T15:07:45.648370+00:00",
+    "argv": [
+      "/atb-data/rye/Visual-encoder/visual_encoder/bidirectional.py",
+      "--steps",
+      "4000",
+      "--output",
+      "runs/bidirectional.json"
+    ],
+    "cli_args": {
+      "model": "Qwen/Qwen3-4B",
+      "slots": 16,
+      "steps": 4000,
+      "warmstart_steps": 800,
+      "batch_size": 12,
+      "lr": 0.001,
+      "warmup": 50,
+      "eval_every": 1000,
+      "interim_eval_samples": 16,
+      "eval_samples": 64,
+      "seed": 20260815,
+      "device": "cuda",
+      "output": "runs/bidirectional.json"
+    },
+    "versions": {
+      "python": "3.12.2",
+      "torch": "2.9.0+cu128",
+      "transformers": "4.57.6",
+      "numpy": "1.26.4",
+      "datasets": "4.2.0"
+    }
+  },
+  "model": "Qwen/Qwen3-4B",
+  "note": "one bridge, both directions (peers share weights)",
+  "trained_template_eval": {
+    "eval_samples": 64,
+    "exact_rate": 0.0,
+    "char_accuracy": 0.570021137331072
+  },
+  "novel_template_eval": {
+    "eval_samples": 64,
+    "exact_rate": 0.0,
+    "char_accuracy": 0.5750297418292198
+  },
+  "interim_evals": [
+    {
+      "step": 1000,
+      "eval_samples": 16,
+      "exact_rate": 0.0,
+      "char_accuracy": 0.39163417541880685
+    },
+    {
+      "step": 2000,
+      "eval_samples": 16,
+      "exact_rate": 0.0,
+      "char_accuracy": 0.4924932765117948
+    },
+    {
+      "step": 3000,
+      "eval_samples": 16,
+      "exact_rate": 0.0,
+      "char_accuracy": 0.5147017230230169
+    }
+  ],
+  "bridge_checkpoint": "runs/bridges/lp3b_selfport_Qwen3-4B_16slots.pt",
+  "train_seconds": 1741.3635923429392
+}
