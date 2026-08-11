@@ -466,6 +466,29 @@ the blue fruit pocket" — the whisper's poetry).
 
 **Published:** <https://github.com/rhowardstone/latent-port> (private).
 
+## 2026-08-11 — Binding control VERDICT (external-review A4)
+
+Ran the order-preserving warm-start sweep at 20 bits/slot (`runs/binding/*.json`),
+the load where content is ~95% present but misordered. Order-error dose-response:
+
+| warm start | 20b exact | content | order_err |
+| --- | ---: | ---: | ---: |
+| mean (ε=0, confound) | 0% | 94.5% | 8.1% |
+| blend ε=0.1 | 0% | 95.2% | 7.2% |
+| blend ε=0.3 | 7.8% | 98.2% | 2.9% |
+| role (ε=1) | 7.8% | 98.5% | 2.9% |
+
+**Verdict: partly artifact, partly real — both the finding and the critique were
+right.** (1) The reviewer was correct that the permutation-invariant `mean` warm
+start *inflated* the transpositions: order-preserving init cut order error 8.1%→2.9%
+and recovered exact 0%→7.8%. (2) But a **real residual** survives the best init —
+2.9% order error and only 7.8% exact remain, so there is a genuine (smaller)
+frozen-receiver binding limit underneath. (3) It **plateaus at ε=0.3**; full `role`
+(ε=1) does not beat it — exactly the reviewer's prediction that pure orthogonal
+role-binding lands off B's native geometry. The ε-sweep (not a binary mean-vs-role
+test) is what separated artifact from residual. The residual 2.9% is the handoff to
+`receiver_lora.py` (train B too), queued at the same 20-bit load tonight.
+
 ## 2026-08-11 — Token savings, measured honestly (LP-2)
 
 `visual_encoder/token_savings.py`, 96 held-out messages, 4B→2B, `channel_metrics`
