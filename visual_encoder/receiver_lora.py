@@ -21,6 +21,8 @@ import torch
 from torch import nn
 from peft import LoraConfig, get_peft_model
 
+import os
+
 from .channel_metrics import cluster_bootstrap_ci
 from .latent_port import (
     LatentSender,
@@ -104,8 +106,34 @@ def main() -> None:
         opt = torch.optim.AdamW(trainables, lr=args.lr)
         sched = torch.optim.lr_scheduler.LambdaLR(
             opt, lambda s: min(1.0, (s + 1) / args.warmup) * 0.5 * (1 + math.cos(math.pi * min(1.0, s / args.steps))))
+        ck = args.output.parent / "ckpt" / f"rlora_{label}_{args.chars}c.pt"
+        # checkpoint only TRAINABLE params (sender + any LoRA) — never the frozen 2B
+        def trainable_state():
+            return {n: p.detach().cpu() for n, p in model.named_parameters() if p.requires_grad}
+        def load_trainable(state):
+            own = dict(model.named_parameters())
+            for n, v in state.items():
+                if n in own:
+                    own[n].data.copy_(v.to(own[n].device))
+        def save_ck(step):
+            try:
+                ck.parent.mkdir(parents=True, exist_ok=True)
+                torch.save({"step": step, "sender": sender.state_dict(), "opt": opt.state_dict(),
+                            "trainable": trainable_state()}, str(ck) + ".tmp")
+                os.replace(str(ck) + ".tmp", ck)
+            except Exception as exc:
+                print(f"ckpt save failed ({exc}); continuing", flush=True)
+        start = 0
+        if ck.exists():
+            try:
+                c = torch.load(ck, map_location=args.device)
+                sender.load_state_dict(c["sender"]); opt.load_state_dict(c["opt"])
+                load_trainable(c["trainable"]); start = int(c["step"]) + 1
+                print(f"RESUMED {label} at step {start}", flush=True)
+            except Exception as exc:
+                print(f"resume {label} failed ({exc}); fresh", flush=True)
         interim = []
-        for step in range(args.steps):
+        for step in range(start, args.steps):
             rng = np.random.default_rng(args.seed * 1_000_003 + step)
             pays = [random_payload(args.chars, rng) for _ in range(args.batch_size)]
             bits = torch.from_numpy(np.stack([payload_to_bits(x, args.slots) for x in pays])).to(args.device)
@@ -117,6 +145,8 @@ def main() -> None:
             torch.nn.utils.clip_grad_norm_(trainables, 1.0); opt.step(); sched.step()
             if step % 50 == 0 or step == args.steps - 1:
                 print(f"  {label} step={step}/{args.steps} loss={loss.item():.4f}", flush=True)
+            if step % 250 == 0 and step:
+                save_ck(step)
             if args.eval_every and step and step % args.eval_every == 0:
                 sc = evaluate(model, batcher, sender, args, 16)
                 interim.append({"step": step, "exact": sc["exact_rate"], "order_err": sc["order_error_share"]})

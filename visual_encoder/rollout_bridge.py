@@ -23,6 +23,7 @@ import torch
 from torch import nn
 
 from .channel_metrics import cluster_bootstrap_ci
+from .checkpoints import checkpoint, clear, resume
 from .latent_bridge import ABrain, GatherBridge
 from .latent_port import MARKER, PortBatcher, greedy_decode, load_receiver, text_positions
 from .provenance import provenance
@@ -104,8 +105,10 @@ def main() -> None:
     opt = torch.optim.AdamW(bridge.parameters(), lr=args.lr, weight_decay=0.01)
     sched = torch.optim.lr_scheduler.LambdaLR(
         opt, lambda s: min(1.0, (s + 1) / args.warmup) * 0.5 * (1 + math.cos(math.pi * min(1.0, s / args.steps))))
+    ckpt = args.output.parent / "ckpt" / f"rollout_{args.pictures}pic.pt"
+    start = resume(ckpt, args.device, bridge=bridge, opt=opt, sched=sched)
     started, interim = time.monotonic(), []
-    for step in range(args.steps):
+    for step in range(start, args.steps):
         rng = np.random.default_rng(args.seed * 1_000_003 + step)
         msgs = long_messages(brain, train, args.pictures, rng, args.batch_size)
         loss_acc = 0.0
@@ -122,6 +125,8 @@ def main() -> None:
         opt.step(); sched.step()
         if step % 50 == 0 or step == args.steps - 1:
             print(f"step={step}/{args.steps} loss={loss_acc:.4f} ({time.monotonic()-started:.0f}s)", flush=True)
+        if step % 250 == 0 and step:
+            checkpoint(ckpt, step, bridge=bridge, opt=opt, sched=sched)
         if args.eval_every and step and step % args.eval_every == 0:
             sc = evaluate(model, tokenizer, brain, bridge, batcher, val, args, 16)
             interim.append({"step": step, **{k: sc[k] for k in ("exact_rate",)}, "fid": sc["char_fidelity"]["mean"]})
@@ -137,6 +142,7 @@ def main() -> None:
     print(json.dumps({k: v for k, v in result.items() if k != "provenance"}, sort_keys=True), flush=True)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, indent=2) + "\n")
+    clear(ckpt)  # experiment done; drop the mid-training checkpoint
 
 
 if __name__ == "__main__":

@@ -1,0 +1,60 @@
+{
+  "experiment": "LP-2 multi-picture rollout",
+  "provenance": {
+    "git_sha": "67f155d08a1ef616a06cd4cc061390dbf7e07831-dirty",
+    "timestamp_utc": "2026-08-11T11:00:26.471367+00:00",
+    "argv": [
+      "/atb-data/rye/Visual-encoder/visual_encoder/rollout_bridge.py",
+      "--pictures",
+      "3",
+      "--steps",
+      "6",
+      "--eval-every",
+      "0",
+      "--eval-samples",
+      "1",
+      "--batch-size",
+      "2",
+      "--output",
+      "runs/rollout_ckpt_smoke.json"
+    ],
+    "cli_args": {
+      "receiver": "Qwen/Qwen3-VL-2B-Instruct",
+      "sender": "Qwen/Qwen3-4B",
+      "init": "runs/bridges/lp2_text_16slots.pt",
+      "pictures": 3,
+      "steps": 6,
+      "batch_size": 2,
+      "lr": 0.0005,
+      "warmup": 50,
+      "eval_every": 0,
+      "eval_samples": 1,
+      "seed": 20260817,
+      "device": "cuda",
+      "output": "runs/rollout_ckpt_smoke.json"
+    },
+    "versions": {
+      "python": "3.12.2",
+      "torch": "2.9.0+cu128",
+      "transformers": "4.57.6",
+      "numpy": "1.26.4",
+      "datasets": "4.2.0"
+    }
+  },
+  "pictures": 3,
+  "interim_evals": [],
+  "final": {
+    "samples": 1,
+    "exact_rate": 0.0,
+    "char_fidelity": {
+      "mean": 0.2341040462427746,
+      "lo": 0.2341040462427746,
+      "hi": 0.2341040462427746,
+      "n": 1,
+      "n_boot": 2000,
+      "bootstrap_seed": 20260817
+    }
+  },
+  "bridge_checkpoint": "runs/bridges/lp2_rollout_3pic_16slots.pt",
+  "train_seconds": 11.08886474580504
+}
