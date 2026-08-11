@@ -278,6 +278,17 @@ does not crash from 6→0.9 bits because one pair of characters transposed. Adop
 `R^var` as the project's primary rate; keep `G(b)` only as an operational
 goodput. (GMI / LM-rate are the standard tools here.)
 
+**Free-text caveat (CPU node A, 2026-08-11 — important).** `I_B^var = H(X) +
+E[log₂ q_B(X|Z)]` is directly usable for **LP-1** because the uniform Base32 source
+has *known* entropy `H(X) = 5C`. It is **NOT** usable for Wikitext/free text by
+substituting token count for `H(X)` — natural-language entropy is unknown and far
+below token count. For **LP-2**, use **paired information gain** against a control:
+`ΔI = (NLL_null − NLL_correct)/ln2` (bits), computed for `Z_deranged`,
+`Z_moment-matched`, and `Z=0` nulls. This measures information the *specific* latent
+delivers over the prior — and conveniently **unifies A2 (variational rate) with A5
+(causal controls)** in one number. A CPU reference implementation + BSC oracle +
+bootstrap CIs is landing as `channel_metrics.py` (validated in a CPU notebook).
+
 ## A3. Problem 1's framework: pullback-Fisher geometry (not σ_min of J)
 
 `σ_min(J)`, `J = ∂logits/∂Z`, is the wrong summary — `Z` has ~3·10⁴ dims and huge

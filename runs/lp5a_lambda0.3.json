@@ -1,0 +1,81 @@
+{
+  "experiment": "LP-2 text bridge",
+  "legibility_weight": 0.3,
+  "cotrained_tap_char_accuracy": 0.40578999791149517,
+  "window_a_tokens": 32,
+  "steps": 6000,
+  "bridge_parameters": 10252289,
+  "train_seconds": 1749.8502108498942,
+  "interim_evals": [
+    {
+      "step": 1000,
+      "exact_rate": 0.0,
+      "char_accuracy": 0.5315852435536399
+    },
+    {
+      "step": 2000,
+      "exact_rate": 0.0,
+      "char_accuracy": 0.6112196155397627
+    },
+    {
+      "step": 3000,
+      "exact_rate": 0.0625,
+      "char_accuracy": 0.6703843107261632
+    },
+    {
+      "step": 4000,
+      "exact_rate": 0.0625,
+      "char_accuracy": 0.7368522058199662
+    },
+    {
+      "step": 5000,
+      "exact_rate": 0.0,
+      "char_accuracy": 0.6937363037047863
+    }
+  ],
+  "trained_template_eval": {
+    "eval_samples": 64,
+    "exact_rate": 0.015625,
+    "char_accuracy": 0.7152302180959587,
+    "mean_b_tokens": 23.171875,
+    "slots": 16,
+    "position_compression_vs_text": 1.4482421875,
+    "examples": [
+      {
+        "sent": "Altar 5 is carved with two nobles , one of whom is probably Jasaw Chan K 'awiil I. They",
+        "decoded": "Altar 5 is carved with two nobles , one of whom is possibly Pasin Cak 's 'kine' of the 11th."
+      },
+      {
+        "sent": "The rostrum of H. americanus bears one or more spines on the underside , which are lacking in H. gam",
+        "decoded": "The rostrum of H. henselae has one or few spines on the underside , which are unfused in H. henselae"
+      },
+      {
+        "sent": "The highest point on the island is in the north west at Virda Field , which rises to 87 metres (",
+        "decoded": "The highest point on the island is in the north west at Virda Tower , which rises to 85 metres ("
+      }
+    ]
+  },
+  "novel_template_eval": {
+    "eval_samples": 64,
+    "exact_rate": 0.015625,
+    "char_accuracy": 0.7262180262864879,
+    "mean_b_tokens": 23.171875,
+    "slots": 16,
+    "position_compression_vs_text": 1.4482421875,
+    "examples": [
+      {
+        "sent": "Altar 5 is carved with two nobles , one of whom is probably Jasaw Chan K 'awiil I. They",
+        "decoded": "Altar 5 is carved with two Morons , one of whom is possibly Pasin Cak 's 'I."
+      },
+      {
+        "sent": "The rostrum of H. americanus bears one or more spines on the underside , which are lacking in H. gam",
+        "decoded": "The rostrum of H. henselae has one or few spines on the underside , which are unfused in H. sasakii"
+      },
+      {
+        "sent": "The highest point on the island is in the north west at Virda Field , which rises to 87 metres (",
+        "decoded": "The highest point on the island is in the north west at Virda Tower , which rises to 85 metres ("
+      }
+    ]
+  },
+  "bridge_checkpoint": "runs/bridges/lp2_text_16slots_lam0.3.pt"
+}
