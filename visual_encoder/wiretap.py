@@ -252,7 +252,10 @@ def main() -> None:
     args = parser.parse_args()
 
     receiver_scores = {}
-    if args.lp1_results.exists():
+    # Only attach LP-1 direct-sender receiver scores in sender mode. In bridge
+    # mode the receiver is the LP-3 bridge (different artifact); pulling from
+    # latent_port.json here would mislabel the bridge's receiver score.
+    if args.source == "sender" and args.lp1_results.exists():
         for row in json.loads(args.lp1_results.read_text())["results"]:
             receiver_scores[row["characters"]] = {
                 "receiver_exact_rate": row["exact_rate"],

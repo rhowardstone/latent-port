@@ -441,11 +441,21 @@ A replies (×2)** — training the port on its actual sender's voice. Demo: mult
 packet rollout (long replies stream as numbered 16-vector frames, all packets
 live in B's context), one-clause port-mechanics addition to A's system line.
 
-**Battery** (`runs/text_bridge.json` v3): chat register 77.7% chars (v2: 73.1%),
-wikitext 71.6% with first exact packets, novel template 72.4% ≈ trained.
-Password transmission `A20h9jt6eGa` → ~8/11 chars (was mush pre-secrets-corpus).
-Comprehension noisy across retrains (2/6 expanded set; single-sample variance
-dominates). Text tap still LM-prior-limited (~53%); smoother queued.
+**Committed artifact** (`runs/text_bridge.json` v3, 4B sender): wikitext val
+**71.6%** chars (trained template), **72.4%** (novel template), first exact
+packets. This is the only artifact-backed LP-2 v3 fidelity number.
+
+**PROVENANCE CORRECTION (external review, 2026-08-10).** An earlier version of
+this entry cited "chat register 77.7%" against `text_bridge.json` — but that
+number came from an *uncommitted* scratchpad battery (`port_tests.py`) on a
+*different eval set* (synthetic chat, not wikitext), and the committed artifact
+neither contains it nor recorded its sender model. That violated the repo's
+"every claim cites its artifact" standard. The 77.7% chat-register figure is
+**withdrawn pending a committed, self-describing battery artifact** (re-run
+queued: saves sender model, git SHA, seeds, and all held-out predictions, not 3
+examples). Treat only the 71.6/72.4% wikitext numbers as backed.
+Password/comprehension anecdotes (`A20h9jt6eGa`→~8/11 chars; 2–6 comprehension
+items) are indicative only — far too few samples to estimate a rate.
 
 **Live demo verification** (port 8766, all real API transcripts): orange →
 verbatim crossing → B answers "orange". Password → B answers `a20h9t2e` (7/11;

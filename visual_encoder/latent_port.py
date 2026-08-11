@@ -238,6 +238,8 @@ def evaluate(model, batcher, sender, args, characters: int, samples: int) -> dic
     exact = 0
     char_accuracy = []
     text_tokens = []
+    unordered = []
+    order_err = []
     examples = []
     for index in range(samples):
         rng = np.random.default_rng(args.seed * 7919 + 777_000 + index)
@@ -256,6 +258,9 @@ def evaluate(model, batcher, sender, args, characters: int, samples: int) -> dic
         text_tokens.append(
             len(batcher.tokenizer(payload, add_special_tokens=False).input_ids)
         )
+        split = content_vs_order(payload, decoded, args.slots)
+        unordered.append(split["unordered_char_accuracy"])
+        order_err.append(split["order_error_share"])
         if index < 3:
             examples.append({"payload": payload, "decoded": decoded})
     sender.train()
@@ -264,6 +269,11 @@ def evaluate(model, batcher, sender, args, characters: int, samples: int) -> dic
         "eval_samples": samples,
         "exact_rate": exact_rate,
         "char_accuracy": float(np.mean(char_accuracy)),
+        # Content vs order (external-review binding control): if unordered stays
+        # high while order_error rises, transpositions dominate — the binding signal.
+        "unordered_char_accuracy": float(np.mean(unordered)),
+        "order_error_share": float(np.mean(order_err)),
+        "warmstart_order": args.warmstart_order,
         "net_exact_bits_per_slot": 5 * characters * exact_rate / args.slots,
         "loaded_bits_per_slot": 5 * characters / args.slots,
         "text_tokens_for_same_payload": float(np.mean(text_tokens)),
@@ -284,13 +294,86 @@ def char_embedding_table(model, tokenizer, device) -> torch.Tensor:
     return torch.stack(rows).float()
 
 
-def warmstart_targets(payloads: list[str], slots: int, char_table: torch.Tensor) -> torch.Tensor:
-    """Per-slot mean of the slot's chunk character embeddings, [batch, slots, d]."""
+def warmstart_targets(
+    payloads: list[str], slots: int, char_table: torch.Tensor, order: str = "mean"
+) -> torch.Tensor:
+    """Per-slot warm-start target, [batch, slots, d].
+
+    order="mean": average the slot's chunk char embeddings. This is
+    PERMUTATION-INVARIANT — z(AB)=z(BA) — so it erases sub-slot order before CE
+    training, a confound for any binding claim (external review, 2026-08-10).
+
+    order="role": (1/sqrt m) * sum_j roll(e(c_j), shift_j). Each sub-slot
+    position j gets a distinct fixed circular shift (an orthogonal role binding,
+    HRR-style), so the target is order-SENSITIVE. Use this as the control that
+    tells whether transposition failures are intrinsic to the frozen receiver or
+    manufactured by the mean warm start.
+    """
     indices = torch.tensor(
         [[BASE32_ALPHABET.index(c) for c in payload] for payload in payloads],
         device=char_table.device,
     )
-    return char_table[indices].reshape(len(payloads), slots, -1, char_table.shape[-1]).mean(dim=2)
+    chunks = char_table[indices].reshape(len(payloads), slots, -1, char_table.shape[-1])
+    if order == "mean":
+        return chunks.mean(dim=2)
+    if order == "role":
+        m, d = chunks.shape[2], chunks.shape[3]
+        shifts = [(j * (d // (m + 1))) for j in range(m)]
+        rolled = torch.stack([chunks[:, :, j].roll(shifts[j], dims=-1) for j in range(m)], dim=2)
+        return rolled.sum(dim=2) / (m ** 0.5)
+    raise ValueError(f"unknown warm-start order: {order}")
+
+
+def damerau_levenshtein(a: str, b: str) -> int:
+    """Edit distance counting an adjacent transposition as ONE operation."""
+    da = {}
+    inf = len(a) + len(b)
+    d = [[inf] * (len(b) + 2) for _ in range(len(a) + 2)]
+    d[0][0] = inf
+    for i in range(len(a) + 1):
+        d[i + 1][0], d[i + 1][1] = inf, i
+    for j in range(len(b) + 1):
+        d[0][j + 1], d[1][j + 1] = inf, j
+    for i in range(1, len(a) + 1):
+        db = 0
+        for j in range(1, len(b) + 1):
+            k, l = da.get(b[j - 1], 0), db
+            cost = 0 if a[i - 1] == b[j - 1] else 1
+            if not cost:
+                db = j
+            d[i + 1][j + 1] = min(
+                d[i][j] + cost, d[i + 1][j] + 1, d[i][j + 1] + 1,
+                d[k][l] + (i - k - 1) + 1 + (j - l - 1),
+            )
+        da[a[i - 1]] = i
+    return d[len(a) + 1][len(b) + 1]
+
+
+def content_vs_order(payload: str, decoded: str, slots: int) -> dict:
+    """Separate content errors (wrong char multiset) from pure ordering errors."""
+    from collections import Counter
+
+    if len(payload) % slots or not decoded:
+        return {"unordered_char_accuracy": 0.0, "transposition_share": 0.0}
+    m = len(payload) // slots
+    unordered_hits, order_only = 0, 0
+    dec = decoded[: len(payload)].ljust(len(payload))
+    for s in range(slots):
+        p = payload[s * m : (s + 1) * m]
+        q = dec[s * m : (s + 1) * m]
+        shared = sum((Counter(p) & Counter(q)).values())
+        unordered_hits += shared
+        # of the positions whose content is present in the slot, how many are misordered
+        order_only += shared - sum(1 for x, y in zip(p, q) if x == y)
+    total = len(payload)
+    dl = damerau_levenshtein(payload, decoded)
+    lev = levenshtein(payload, decoded)
+    return {
+        "unordered_char_accuracy": unordered_hits / total,
+        "order_error_share": order_only / total,
+        # transpositions cost 1 in DL but 2 in Levenshtein; the gap flags them
+        "transposition_share": max(0, lev - dl) / max(1, lev),
+    }
 
 
 def run_config(model, tokenizer, args, characters: int) -> dict:
@@ -303,7 +386,7 @@ def run_config(model, tokenizer, args, characters: int) -> dict:
         args.slots, characters // args.slots, d_model, embed_rms, hidden=args.hidden
     ).to(args.device)
     batcher = PortBatcher(model, tokenizer, args.slots, args.device)
-    if args.warmstart_steps:
+    if args.warmstart_steps and args.warmstart_order != "none":
         char_table = char_embedding_table(model, tokenizer, args.device)
         warm_optimizer = torch.optim.AdamW(sender.parameters(), lr=args.lr)
         for step in range(args.warmstart_steps):
@@ -314,7 +397,8 @@ def run_config(model, tokenizer, args, characters: int) -> dict:
             ).to(args.device)
             latents = sender(bits)
             warm_loss = nn.functional.mse_loss(
-                latents.float(), warmstart_targets(payloads, args.slots, char_table)
+                latents.float(),
+                warmstart_targets(payloads, args.slots, char_table, order=args.warmstart_order),
             )
             warm_optimizer.zero_grad(set_to_none=True)
             warm_loss.backward()
@@ -409,6 +493,9 @@ def main() -> None:
     parser.add_argument("--hidden", type=int, default=512)
     parser.add_argument("--steps", type=int, default=1200)
     parser.add_argument("--warmstart-steps", type=int, default=500)
+    parser.add_argument("--warmstart-order", choices=("mean", "role", "none"), default="mean",
+                        help="binding control: 'mean' is permutation-invariant (confound); "
+                             "'role' preserves sub-slot order; 'none' skips warm start")
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--warmup", type=int, default=50)

@@ -233,6 +233,166 @@ translation **under known alignment**, not yet a general variable-length
 mind-to-mind interface. Recovering learned alignment is an open sub-problem (its
 failure mode — attention-sink collapse on low-signal targets — is documented).
 
+---
+
+# Addendum — mathematical corrections and upgrades (external review, 2026-08-10)
+
+A reviewer did a two-pass line-level review and supplied the following; these
+supersede the looser framing above where they conflict. Credit to that review.
+
+## A0. Name the cost axes; we measure context/KV compression, not bandwidth
+
+Cost is a vector, not a scalar:
+`(receiver positions, transport bits, sender FLOPs, receiver FLOPs, latency,
+fidelity, auditability)`. A latent slot and a token both cost the receiver one
+KV position — so our *context-position* compression comparison is valid — but a
+2048-d bf16 vector is **4096 bytes on the wire**, not one integer token id. We
+are demonstrating **context/KV compression**, not bandwidth compression. Use
+those names. North-star question: *how much task-relevant, independently
+auditable information crosses between frozen models per unit of real system
+cost?*
+
+## A1. `C_phys` as stated is near-trivial — replace it with a defined channel
+
+For a deterministic sender `Z = S_θ(X)` injective over the message set,
+`I(X;Z) = H(X) = N` exactly (in exact arithmetic). So "≥20 bits/slot physically
+survive" is almost content-free; the *interesting* result is that a **small**
+learnable tap recovers it. To get a real physical-capacity/robustness curve,
+define a nontrivial channel: `Z̃ = Q_q(Z + η)`, `Q_q` = 8/4/2-bit quantization,
+`η ~ N(0, σ²Σ)`, plus low-rank projection. Then sweep precision/noise/rank and
+measure survival. This also starts answering whether latent transport could ever
+win on true bandwidth (Problem A0).
+
+## A2. The right receiver metric is a variational / mismatched-decoding rate
+
+This is a **mismatched-decoding** problem: encoder trainable, decoder `B` frozen
+and suboptimal for the code. Stop reporting `G(b) = N·P(exact)/k` as a capacity.
+Since `H(X)=N` for random payloads, and we already compute teacher-forced CE,
+report the **variational lower bound** on decoder-recoverable information:
+
+`I_B^var = N + E[log₂ q_B(X | Z)]`,  `R_B^var = I_B^var / k`,
+
+and identically `R_T^var` for the tap `q_T`. Now the frozen-readout gap is in one
+unit, uses all probability mass (not a brittle greedy exact-match endpoint), and
+does not crash from 6→0.9 bits because one pair of characters transposed. Adopt
+`R^var` as the project's primary rate; keep `G(b)` only as an operational
+goodput. (GMI / LM-rate are the standard tools here.)
+
+## A3. Problem 1's framework: pullback-Fisher geometry (not σ_min of J)
+
+`σ_min(J)`, `J = ∂logits/∂Z`, is the wrong summary — `Z` has ~3·10⁴ dims and huge
+nullspaces. Use the receiver's **pullback Fisher metric**
+`G(z) = J(z)ᵀ (diag(p) − ppᵀ) J(z)` (sum tokenwise for a sequence), so
+`KL(p_B(·|z) ‖ p_B(·|z+δ)) ≈ ½ δᵀG(z)δ`. Then the tap/receiver gap has a crisp
+statement: **the sender stores information in directions that separate messages
+geometrically but have tiny Fisher length under `B`; the tap learns them, `B`
+barely reacts.** A100-friendly: never build the 3·10⁴² matrix — use JVP/VJP with
+stochastic Lanczos / randomized SVD for the leading spectrum. Measure effective
+dimension `r_eff = (tr G)² / tr(G²)` and eigenvalue decay at 5/10/15/20/30
+bits/slot, and test whether codeword differences `Δz` increasingly live in
+low-`G` directions as density rises. **Then improve the code**: add a
+Fisher-separation term `L = L_B − α·E[(z_i−z_j)ᵀ G (z_i−z_j)]` — a code designed
+around the receiver's functional geometry, not Euclidean embedding geometry.
+(This is the highest-ceiling direction.)
+
+## A4. The binding result has a curriculum confound — run the control first
+
+`warmstart_targets(order="mean")` is `z⁽⁰⁾ = (1/m) Σ_j e(c_j)`, **permutation-
+invariant**: `z⁽⁰⁾(AB)=z⁽⁰⁾(BA)`. So the curriculum erases order before CE, and
+the transposition-heavy failure is partly manufactured — worse as `m` grows,
+exactly where it appears. Controls (now implemented, `--warmstart-order`):
+`mean` (confound) vs `role` (order-preserving, `(1/√m)Σ_j R_j e(c_j)`) vs `none`,
+crossed with staged `1→2→4` chars/slot, at 15/20/30 bits/slot. Score with the
+new `content_vs_order` (unordered/multiset accuracy via Damerau–Levenshtein
+separated from ordering). **Only if unordered stays ~100% while permutation
+collapses under role-preserving init is the binding bottleneck real.** Run this
+before invoking HRR/tensor-product names. *This can change the empirical story
+overnight and is the recommended first A100 job.*
+
+## A5. Mandatory causal controls (esp. LP-2/LP-3)
+
+Per the causal-audit result (arXiv:2608.04893): a large effect from injecting a
+cache does **not** prove example-specific information crossed — B may hallucinate
+from its language prior (and our own "B beats the tap on natural text" is
+evidence of exactly that prior). For every LP-2/3 eval run the ablation set
+`{Z_correct, Z_deranged, Z=0, Z_moment-matched-random}` and require
+`Z_correct ≫ Z_deranged`. Plus the killer: **A input embeddings vs A final hidden
+states** at equal bridge capacity — if hidden states win, we're transmitting
+something the sender *computed*, not a fancy transcoder. This is what upgrades
+"mind-to-mind" from slogan to claim.
+
+## A6. LP-5 as a bilevel/adversarial game; detector via conformal calibration
+
+LP-5a (joint bridge + reference tap) measures a *cooperative* auditable protocol.
+The hard question is inherent auditability: `min_S L_B(S) s.t. min_{T∈𝒯} L_T(S) ≤ ε`
+(inner = train a fresh auditor to convergence). Adversarial version
+`min_S [L_B − μ·min_{T∈𝒯} L_T]` = can `S` hide from the best affordable auditor
+while staying `B`-useful (wiretap-channel territory). For the detector, keep any
+score (diagonal-z, low-rank Mahalanobis, tap entropy) but convert to a
+**conformal p-value** on a held-out legit calibration set → honest
+`P_legit(false alarm) ≤ α`. Real test isn't Gaussian jamming (gauges demolish it)
+but `δ* = argmax covert-info(z+δ) s.t. B(z+δ)=B(z), detector ≤ τ`. Also:
+`C_phys − C_read` is **not** "exactly" covert room — unused info need not be
+independently controllable; the right object is `sup I(M_covert; Z | Y_B)` under
+a utility + detectability constraint.
+
+## A7. LP-2 wants information-bottleneck / rate-distortion, and a real task battery
+
+Exact transcription is the wrong objective for inter-model comms. With `R = k`
+positions and two distortions `D_surface(x,x̂)`, `D_task(y,ŷ)`, map the frontier
+`R(D_surface, D_task)` — this makes the "whisper regime" (surface distortion up,
+task distortion low) mathematically real. Needs a real battery, not 3/4 and 2/6
+anecdotes: random key-value stores, synthetic appointments, graph edges, random
+access codes, multi-hop relations (priors can't rescue B), then natural QA.
+Note our current LP-2 is only **1.45× context-position compression**; Gist Tokens
+reports up to 26× in its setting, so soften/source the "historically 4–10×" line.
+
+## A8. Cross-model alignment: CCA/Procrustes before another Perceiver (LP-3b)
+
+Estimate the A↔B geometry explicitly. With paired positions
+`H_A ∈ ℝ^{n×d_A}, H_B ∈ ℝ^{n×d_B}`, try whitened CCA and orthogonal/low-rank
+Procrustes as initialization (Procrustes preserves internal geometry; CCA
+maximizes cross-model agreement), then a learned monotone/optimal-transport
+alignment. The real question isn't "MLP maps A-pos-17→B-slot-6" (proven) but
+"discover which portions of A's variable-length state become each B slot" — the
+general port.
+
+## A9. LP-4 is a dynamical-systems stability problem
+
+For recursive latent emission `z_{t+1} = g_θ(h_t, z_t)`, accuracy isn't the crux —
+stability is. Study `J_t = ∂z_{t+1}/∂z_t`; products `J_T···J_1` growing ⇒ errors
+explode, contracting too hard ⇒ information vanishes. Track spectral radius /
+Lyapunov exponents; train for the middle regime via spectral normalization,
+periodic discrete anchors, or an error-correcting refresh every `m` steps.
+
+## A10. Fix Problem 5's statement (identifiability, not "white-box ⇒ translator")
+
+"White-box access ⇒ translator exists" is trivial (just run `B` as the decoder)
+or ill-defined. Latent codes have **gauge symmetries**: an invertible map of the
+code plus its inverse in the receiver leaves behavior unchanged, so without
+external semantic anchors there may be no uniquely identifiable "meaning." The
+real theorem is about **translator complexity and identifiability under
+restricted observations/queries**, not a blanket universal-translator conjecture.
+
+## A11. Provenance & reproducibility hygiene (blocking for publication-grade)
+
+Every run must be self-describing: git SHA, full CLI, model+tokenizer revisions,
+package versions, dataset revision/hash, GPU, all seeds, and **save every
+held-out prediction**, not three examples. (The withdrawn 77.7% is exactly what
+this prevents.) Add CI so "tests pass" is GitHub-demonstrated, and report ≥3–5
+training seeds around any critical point with cluster-bootstrap CIs (the
+visual-probe code already has this discipline; the latent side must match it).
+
+## Reprioritized A100 queue (review's order)
+
+1. **Binding control** (A4) — implemented; run at 15/20/30 bits/slot × {mean,role,none}. Cheap, may rewrite the story.
+2. Fixes (A11 + the committed bug-fixes) — mostly done; finish self-describing runs + CI.
+3. **Variational/GMI metric** (A2) retrofit across LP-1/2/3.
+4. **Causal controls** (A5) — deranged/zero/moment-matched + embed-vs-hidden.
+5. **Fisher-spectrum experiment** (A3) — the explanation, then the better code.
+6. Outer code at 15–20 bits/slot after characterizing sub/trans/ins/del error mix.
+7. LP-5 bilevel (A6), then LP-4 dynamics (A9).
+
 ## Good first targets on an A100
 
 - **Fastest to a result:** Problem 4 (running) and Problem 3 (a ~9M-param
