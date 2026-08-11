@@ -99,6 +99,36 @@ chase: *a small latent conversation between specialists solves problems neither
 can, at less compute than the same exchange in English* — and, because of the
 tap, remains auditable.
 
+## What this is NOT — a capability multiplier (honest correction)
+
+A recurring overclaim (mine, and in the source discussions): that a latent colony
+is a "hive mind smarter than any member." Push back on this.
+
+- For equal *total* params, a **dense** model is smarter than an **MoE** — the MoE
+  activates only a fraction of weights per token. MoE's win is compute/memory
+  efficiency, not intelligence. A "colony of specialists on a latent bus" is NOT a
+  monolithic MoE (whose experts are FFN slices with lossless shared attention);
+  it's separately-trained full models over a **lossy** channel. Don't import the
+  MoE efficiency framing to it.
+- The colony can **never** beat a single model that already contains the same
+  knowledge and fits in memory — a monolith has infinite-fidelity internal
+  communication; our channel is the ~72% whisper.
+- Two questions were conflated: **(a) composition of specialists** = the capability
+  source (A knows what B doesn't) — but *text multi-agent already does this*;
+  vectors add nothing to capability here. **(b) vectors vs text** = a *constant-
+  factor* efficiency + auditability win, NOT capability.
+
+Honest value proposition of this whole project: **efficiency** (serve specialists
+that don't fit as one monolith; fewer positions/tokens/latency — cf. Cache-to-
+Cache's ~2× latency), **auditability** (if the field adopts latent comms for
+efficiency, we must be able to read them — valuable regardless of capability), and
+the **self-loop** (test-time-compute reallocation — a modest, task-dependent
+capability angle, per Coconut). Not superintelligence.
+
+Falsifiable test (LP-6): the latent colony must **beat text-relay at equal token
+budget** to justify vectors at all. Current honest prediction: it ties text on
+capability and wins on efficiency/auditability. State it that way.
+
 ## Standing cautions carried from review
 
 - Don't call goodput a capacity; use the variational/GMI rate (A2).

@@ -1,0 +1,80 @@
+{
+  "experiment": "LP-2 text bridge",
+  "legibility_weight": 0.0,
+  "window_a_tokens": 32,
+  "steps": 6000,
+  "bridge_parameters": 10252289,
+  "train_seconds": 1668.2749190111645,
+  "interim_evals": [
+    {
+      "step": 1000,
+      "exact_rate": 0.0,
+      "char_accuracy": 0.5740016457345145
+    },
+    {
+      "step": 2000,
+      "exact_rate": 0.0,
+      "char_accuracy": 0.6646428100827664
+    },
+    {
+      "step": 3000,
+      "exact_rate": 0.0,
+      "char_accuracy": 0.590028247403506
+    },
+    {
+      "step": 4000,
+      "exact_rate": 0.0,
+      "char_accuracy": 0.6867380577528431
+    },
+    {
+      "step": 5000,
+      "exact_rate": 0.0,
+      "char_accuracy": 0.707944091056645
+    }
+  ],
+  "trained_template_eval": {
+    "eval_samples": 64,
+    "exact_rate": 0.015625,
+    "char_accuracy": 0.7156676194289009,
+    "mean_b_tokens": 23.171875,
+    "slots": 16,
+    "position_compression_vs_text": 1.4482421875,
+    "examples": [
+      {
+        "sent": "Altar 5 is carved with two nobles , one of whom is probably Jasaw Chan K 'awiil I. They",
+        "decoded": "Altar 5 is carved with two nobles , one of whom is possibly Kajak 's kinsman Joseph ."
+      },
+      {
+        "sent": "The rostrum of H. americanus bears one or more spines on the underside , which are lacking in H. gam",
+        "decoded": "The rostrum of H. venus bears one or two spines on the base , which are well developed in H. s"
+      },
+      {
+        "sent": "The highest point on the island is in the north west at Virda Field , which rises to 87 metres (",
+        "decoded": "The highest point on the island is in the north west at Virda Park , which rises to 88 metres ("
+      }
+    ]
+  },
+  "novel_template_eval": {
+    "eval_samples": 64,
+    "exact_rate": 0.015625,
+    "char_accuracy": 0.7235361543492469,
+    "mean_b_tokens": 23.171875,
+    "slots": 16,
+    "position_compression_vs_text": 1.4482421875,
+    "examples": [
+      {
+        "sent": "Altar 5 is carved with two nobles , one of whom is probably Jasaw Chan K 'awiil I. They",
+        "decoded": "Altar 5 is carved with two noblemen , one of whom is possibly Kajkavka 's King Joseph I."
+      },
+      {
+        "sent": "The rostrum of H. americanus bears one or more spines on the underside , which are lacking in H. gam",
+        "decoded": "The rostrum of H. venus carries one or two spines on the base , which are well developed in H. sag"
+      },
+      {
+        "sent": "The highest point on the island is in the north west at Virda Field , which rises to 87 metres (",
+        "decoded": "The highest point on the island is in the north west at Virda Park , which rises to 88 metres ("
+      }
+    ]
+  },
+  "bridge_checkpoint": "runs/bridges/lp2_text_16slots_lam0.0.pt"
+}
