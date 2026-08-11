@@ -1,0 +1,105 @@
+{
+  "experiment": "receiver LoRA vs frozen",
+  "provenance": {
+    "git_sha": "2cde26bf0fe3ed65164b3010c063cd27203f82ef",
+    "timestamp_utc": "2026-08-11T14:37:13.271040+00:00",
+    "argv": [
+      "/atb-data/rye/Visual-encoder/visual_encoder/receiver_lora.py",
+      "--chars",
+      "64",
+      "--steps",
+      "3000",
+      "--output",
+      "runs/receiver_lora.json"
+    ],
+    "cli_args": {
+      "model": "Qwen/Qwen3-VL-2B-Instruct",
+      "chars": 64,
+      "slots": 16,
+      "hidden": 512,
+      "lora_r": 16,
+      "steps": 3000,
+      "warmstart_steps": 500,
+      "batch_size": 8,
+      "lr": 0.001,
+      "lora_lr": 0.0001,
+      "warmup": 50,
+      "eval_every": 1000,
+      "eval_samples": 64,
+      "seed": 20260818,
+      "device": "cuda",
+      "output": "runs/receiver_lora.json"
+    },
+    "versions": {
+      "python": "3.12.2",
+      "torch": "2.9.0+cu128",
+      "transformers": "4.57.6",
+      "numpy": "1.26.4",
+      "datasets": "4.2.0"
+    }
+  },
+  "chars": 64,
+  "loaded_bits_per_slot": 20.0,
+  "lora_rank": 16,
+  "lora_trainable_params": 17432576,
+  "frozen": {
+    "samples": 64,
+    "exact_rate": 0.0,
+    "char_accuracy": 0.07649816011532468,
+    "unordered_char_accuracy": 0.170166015625,
+    "order_error_share": 0.00830078125,
+    "char_ci": {
+      "mean": 0.07649816011532468,
+      "lo": 0.06888590832216973,
+      "hi": 0.08524099341662274,
+      "n": 64,
+      "n_boot": 2000,
+      "bootstrap_seed": 20260818
+    }
+  },
+  "frozen_interim": [
+    {
+      "step": 1000,
+      "exact": 0.0,
+      "order_err": 0.0009765625
+    },
+    {
+      "step": 2000,
+      "exact": 0.0,
+      "order_err": 0.0107421875
+    }
+  ],
+  "lora": {
+    "samples": 64,
+    "exact_rate": 0.828125,
+    "char_accuracy": 0.99560546875,
+    "unordered_char_accuracy": 0.996826171875,
+    "order_error_share": 0.001220703125,
+    "char_ci": {
+      "mean": 0.99560546875,
+      "lo": 0.99267578125,
+      "hi": 0.998046875,
+      "n": 64,
+      "n_boot": 2000,
+      "bootstrap_seed": 20260818
+    }
+  },
+  "lora_interim": [
+    {
+      "step": 1000,
+      "exact": 0.0,
+      "order_err": 0.01171875
+    },
+    {
+      "step": 2000,
+      "exact": 0.6875,
+      "order_err": 0.001953125
+    }
+  ],
+  "headline": {
+    "frozen_exact": 0.0,
+    "lora_exact": 0.828125,
+    "frozen_order_err": 0.00830078125,
+    "lora_order_err": 0.001220703125
+  }
+}
