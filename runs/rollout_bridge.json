@@ -1,0 +1,75 @@
+{
+  "experiment": "LP-2 multi-picture rollout",
+  "provenance": {
+    "git_sha": "65d3ffa72cb6c3dedbd025775bc063d15b2058c1",
+    "timestamp_utc": "2026-08-11T12:52:25.722113+00:00",
+    "argv": [
+      "/atb-data/rye/Visual-encoder/visual_encoder/rollout_bridge.py",
+      "--pictures",
+      "4",
+      "--steps",
+      "5000",
+      "--output",
+      "runs/rollout_bridge.json"
+    ],
+    "cli_args": {
+      "receiver": "Qwen/Qwen3-VL-2B-Instruct",
+      "sender": "Qwen/Qwen3-4B",
+      "init": "runs/bridges/lp2_text_16slots.pt",
+      "pictures": 4,
+      "steps": 5000,
+      "batch_size": 6,
+      "lr": 0.0005,
+      "warmup": 50,
+      "eval_every": 1000,
+      "eval_samples": 48,
+      "seed": 20260817,
+      "device": "cuda",
+      "output": "runs/rollout_bridge.json"
+    },
+    "versions": {
+      "python": "3.12.2",
+      "torch": "2.9.0+cu128",
+      "transformers": "4.57.6",
+      "numpy": "1.26.4",
+      "datasets": "4.2.0"
+    }
+  },
+  "pictures": 4,
+  "interim_evals": [
+    {
+      "step": 1000,
+      "exact_rate": 0.0,
+      "fid": 0.5970458589074041
+    },
+    {
+      "step": 2000,
+      "exact_rate": 0.0,
+      "fid": 0.6821583016475001
+    },
+    {
+      "step": 3000,
+      "exact_rate": 0.0,
+      "fid": 0.6960192743171183
+    },
+    {
+      "step": 4000,
+      "exact_rate": 0.0,
+      "fid": 0.7127685399334541
+    }
+  ],
+  "final": {
+    "samples": 48,
+    "exact_rate": 0.0,
+    "char_fidelity": {
+      "mean": 0.7360622452732892,
+      "lo": 0.6928247482389114,
+      "hi": 0.7734252533994016,
+      "n": 48,
+      "n_boot": 2000,
+      "bootstrap_seed": 20260817
+    }
+  },
+  "bridge_checkpoint": "runs/bridges/lp2_rollout_4pic_16slots.pt",
+  "train_seconds": 6643.068640089128
+}
