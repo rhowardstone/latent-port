@@ -1,0 +1,73 @@
+{
+  "experiment": "LP-2 token savings (honest)",
+  "provenance": {
+    "git_sha": "425d198588cd41fc22ad2d2532a0e5a810d34333-dirty",
+    "timestamp_utc": "2026-08-11T03:31:45.678543+00:00",
+    "argv": [
+      "/atb-data/rye/Visual-encoder/visual_encoder/token_savings.py",
+      "--samples",
+      "96",
+      "--output",
+      "runs/token_savings.json"
+    ],
+    "cli_args": {
+      "receiver": "Qwen/Qwen3-VL-2B-Instruct",
+      "sender": "Qwen/Qwen3-4B",
+      "bridge": "runs/bridges/lp2_text_16slots.pt",
+      "samples": 96,
+      "seed": 20260816,
+      "device": "cuda",
+      "output": "runs/token_savings.json"
+    },
+    "versions": {
+      "python": "3.12.2",
+      "torch": "2.9.0+cu128",
+      "transformers": "4.57.6",
+      "numpy": "1.26.4",
+      "datasets": "4.2.0"
+    }
+  },
+  "samples": 96,
+  "position_compression": {
+    "mean": 1.1497395833333333,
+    "lo": 1.0631510416666667,
+    "hi": 1.240234375,
+    "n": 96,
+    "n_boot": 2000,
+    "bootstrap_seed": 20260816
+  },
+  "fidelity": {
+    "mean": 0.8329866292490617,
+    "lo": 0.7997714804901757,
+    "hi": 0.8666029788702728,
+    "n": 96,
+    "n_boot": 2000,
+    "bootstrap_seed": 20260816
+  },
+  "mean_b_tokens": 18.395833333333332,
+  "causal_control": {
+    "delta_i_bits_correct_vs_deranged": {
+      "delta_i_bits_per_message_mean": 150.80745479042153,
+      "delta_i_bits_per_message_median": 147.82192269067025,
+      "fraction_positive": 1.0
+    },
+    "delta_i_bits_correct_vs_zero": {
+      "delta_i_bits_per_message_mean": 133.30023714642564,
+      "delta_i_bits_per_message_median": 134.16010678073565,
+      "fraction_positive": 1.0
+    },
+    "delta_i_vs_deranged_ci": {
+      "mean": 150.80745479042153,
+      "lo": 142.68207285067197,
+      "hi": 159.01996594555098,
+      "n": 96,
+      "n_boot": 2000,
+      "bootstrap_seed": 20260816
+    },
+    "note": "correct<<deranged NLL => vectors carry example-specific info, not prior hallucination"
+  },
+  "verdict": {
+    "break_even_tokens": 16,
+    "reading": "16 vectors cost 16 receiver positions. For a message of L text tokens the context saving is L/16x, LOSSY at the measured fidelity; net win only for L>16. Real content transfer is confirmed iff delta_i_vs_deranged CI excludes 0."
+  }
+}

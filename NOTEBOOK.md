@@ -466,6 +466,26 @@ the blue fruit pocket" — the whisper's poetry).
 
 **Published:** <https://github.com/rhowardstone/latent-port> (private).
 
+## 2026-08-11 — Token savings, measured honestly (LP-2)
+
+`visual_encoder/token_savings.py`, 96 held-out messages, 4B→2B, `channel_metrics`
+with cluster-bootstrap CIs (`runs/token_savings.json`):
+
+- **Content transfer is REAL (causal control):** ΔI(correct vs deranged latent) =
+  **150.8 bits/msg**, CI [142.7, 159.0] — excludes 0 decisively; every message
+  positive. correct-vs-zero = 133 bits. So B receives example-specific info from
+  the vectors, NOT prior hallucination (external-review A5 control passed).
+- **Position compression: 1.15×** (CI 1.06–1.24) for ~18-token messages. It is
+  L/16 — break-even ~16 tokens, grows with length. Modest and **lossy**.
+- **Fidelity: 83.3%** (CI 80.0–86.7) on this wikitext+chat mix (higher than the
+  71.6% wikitext-only because chat is shorter/in-distribution).
+
+**Verdict:** the port genuinely transmits (proven), and saves receiver *context*
+positions modestly at a fidelity cost — context/KV compression, not a free lunch,
+and not the generation-step savings (that's LP-4 self-loop). Bug caught+fixed:
+first run reused base32 `normalize()` on free-text decodes → false 6% fidelity;
+raw-text comparison gives the real 83%.
+
 ## 2026-08-10 — LP-5a launched: the legibility tax
 
 Question: what does auditable traffic cost? `--legibility-weight λ` co-trains a

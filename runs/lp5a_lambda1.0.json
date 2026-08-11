@@ -1,0 +1,124 @@
+{
+  "experiment": "LP-2 text bridge",
+  "provenance": {
+    "git_sha": "425d198588cd41fc22ad2d2532a0e5a810d34333",
+    "timestamp_utc": "2026-08-11T03:18:30.724773+00:00",
+    "argv": [
+      "/atb-data/rye/Visual-encoder/visual_encoder/text_bridge.py",
+      "--sender",
+      "Qwen/Qwen3-4B",
+      "--steps",
+      "6000",
+      "--legibility-weight",
+      "1.0",
+      "--tag",
+      "_lam1.0",
+      "--output",
+      "runs/lp5a_lambda1.0.json"
+    ],
+    "cli_args": {
+      "receiver": "Qwen/Qwen3-VL-2B-Instruct",
+      "sender": "Qwen/Qwen3-4B",
+      "slots": 16,
+      "steps": 6000,
+      "legibility_weight": 1.0,
+      "tag": "_lam1.0",
+      "warmstart_steps": 800,
+      "batch_size": 16,
+      "lr": 0.001,
+      "warmup": 50,
+      "eval_every": 1000,
+      "interim_eval_samples": 16,
+      "eval_samples": 64,
+      "seed": 20260813,
+      "device": "cuda",
+      "output": "runs/lp5a_lambda1.0.json"
+    },
+    "versions": {
+      "python": "3.12.2",
+      "torch": "2.9.0+cu128",
+      "transformers": "4.57.6",
+      "numpy": "1.26.4",
+      "datasets": "4.2.0"
+    }
+  },
+  "sender_model": "Qwen/Qwen3-4B",
+  "legibility_weight": 1.0,
+  "cotrained_tap_char_accuracy": 0.4466082765720387,
+  "window_a_tokens": 32,
+  "steps": 6000,
+  "bridge_parameters": 10252289,
+  "train_seconds": 1711.7107652430423,
+  "interim_evals": [
+    {
+      "step": 1000,
+      "exact_rate": 0.0,
+      "char_accuracy": 0.5781326516311576
+    },
+    {
+      "step": 2000,
+      "exact_rate": 0.0,
+      "char_accuracy": 0.6128367883124974
+    },
+    {
+      "step": 3000,
+      "exact_rate": 0.0,
+      "char_accuracy": 0.6736887613831453
+    },
+    {
+      "step": 4000,
+      "exact_rate": 0.0,
+      "char_accuracy": 0.6943805255697242
+    },
+    {
+      "step": 5000,
+      "exact_rate": 0.0,
+      "char_accuracy": 0.7202027942258733
+    }
+  ],
+  "trained_template_eval": {
+    "eval_samples": 64,
+    "exact_rate": 0.0,
+    "char_accuracy": 0.6971650162288153,
+    "mean_b_tokens": 23.171875,
+    "slots": 16,
+    "position_compression_vs_text": 1.4482421875,
+    "examples": [
+      {
+        "sent": "Altar 5 is carved with two nobles , one of whom is probably Jasaw Chan K 'awiil I. They",
+        "decoded": "Alarar 4 is carved with two nobles , one of whom is particularly as Kasun Chakravarti ."
+      },
+      {
+        "sent": "The rostrum of H. americanus bears one or more spines on the underside , which are lacking in H. gam",
+        "decoded": "The rostrum of H. salmonensis has one or two spines on the underside , which are unequal to H. s"
+      },
+      {
+        "sent": "The highest point on the island is in the north west at Virda Field , which rises to 87 metres (",
+        "decoded": "The highest point of the hill is in the north west at Veldt aar , which rises to 87 minutes ("
+      }
+    ]
+  },
+  "novel_template_eval": {
+    "eval_samples": 64,
+    "exact_rate": 0.0,
+    "char_accuracy": 0.7086756289046784,
+    "mean_b_tokens": 23.171875,
+    "slots": 16,
+    "position_compression_vs_text": 1.4482421875,
+    "examples": [
+      {
+        "sent": "Altar 5 is carved with two nobles , one of whom is probably Jasaw Chan K 'awiil I. They",
+        "decoded": "Alarar 5 is carved with two nobles , one of whom is particularly that of Kasun Chakravarti ."
+      },
+      {
+        "sent": "The rostrum of H. americanus bears one or more spines on the underside , which are lacking in H. gam",
+        "decoded": "The rostrum of H. henricus has one or two spines on the underside , which are enlarged in H. s"
+      },
+      {
+        "sent": "The highest point on the island is in the north west at Virda Field , which rises to 87 metres (",
+        "decoded": "The highest point of the hill is in the north west at Veldt aar , which rises to 87 minutes ("
+      }
+    ]
+  },
+  "bridge_checkpoint": "runs/bridges/lp2_text_16slots_lam1.0.pt"
+}
