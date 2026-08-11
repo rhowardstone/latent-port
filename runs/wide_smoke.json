@@ -1,0 +1,63 @@
+{
+  "experiment": "wide picture (single contiguous block)",
+  "provenance": {
+    "git_sha": "a3461c0476bbed6317ac6c8b81e1143e9f845f5e-dirty",
+    "timestamp_utc": "2026-08-11T12:46:50.235483+00:00",
+    "argv": [
+      "/atb-data/rye/Visual-encoder/visual_encoder/wide_picture.py",
+      "--slots",
+      "64",
+      "--window",
+      "128",
+      "--steps",
+      "6",
+      "--eval-every",
+      "0",
+      "--eval-samples",
+      "2",
+      "--batch-size",
+      "2",
+      "--output",
+      "runs/wide_smoke.json"
+    ],
+    "cli_args": {
+      "receiver": "Qwen/Qwen3-VL-2B-Instruct",
+      "sender": "Qwen/Qwen3-4B",
+      "slots": 64,
+      "window": 128,
+      "steps": 6,
+      "batch_size": 2,
+      "lr": 0.001,
+      "warmup": 50,
+      "eval_every": 0,
+      "eval_samples": 2,
+      "seed": 20260819,
+      "device": "cuda",
+      "output": "runs/wide_smoke.json"
+    },
+    "versions": {
+      "python": "3.12.2",
+      "torch": "2.9.0+cu128",
+      "transformers": "4.57.6",
+      "numpy": "1.26.4",
+      "datasets": "4.2.0"
+    }
+  },
+  "slots": 64,
+  "window": 128,
+  "tokens_per_slot": 2.0,
+  "interim_evals": [],
+  "final": {
+    "samples": 2,
+    "exact_rate": 0.0,
+    "char_fidelity": {
+      "mean": 0.07923467580967097,
+      "lo": 0.0786290322580645,
+      "hi": 0.07984031936127745,
+      "n": 2,
+      "n_boot": 2000,
+      "bootstrap_seed": 20260819
+    }
+  },
+  "train_seconds": 4.502890337957069
+}

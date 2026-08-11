@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Overnight autonomous experiment queue. RESUMABLE: skips any job whose result
-# JSON already exists, so a restart (session teardown, crash, watchdog) picks up
-# where it left off. Auto-commits every result, prints NIGHTSHIFT: milestones.
+# Overnight autonomous experiment queue. RESUMABLE (skips jobs whose result JSON
+# exists; every training checkpoints every 250 steps), auto-commits, prints
+# NIGHTSHIFT: milestones. flock guard = one driver; cron watchdog restarts it.
 set -uo pipefail
 cd "$(dirname "$0")/.."
 NOREPLY="$(gh api user --jq .id 2>/dev/null)+rhowardstone@users.noreply.github.com"
@@ -23,26 +23,30 @@ run () {  # label outfile module args...
   fi
 }
 
-# guard: only one driver at a time (the watchdog may also try to start it)
 exec 9>runs/.nightshift.lock
 flock -n 9 || { milestone "another driver holds the lock; exiting"; exit 0; }
 
-# 1) binding control must be finished (its results live in runs/binding/*.json)
-milestone "waiting for binding control to finish"
-while pgrep -f "latent_port --chars" >/dev/null 2>&1; do sleep 60; done
-milestone "binding control finished"
-commit "nightshift: binding control results"
+while pgrep -f "latent_port --chars" >/dev/null 2>&1; do sleep 60; done  # binding
+commit "nightshift: binding results"
 
-# 2) THE ROLLOUT FIX — train B to read multi-picture messages
+# 1) rollout fix (resumes/finishes if it was mid-run, or skips if done)
 run rollout runs/rollout_bridge.json visual_encoder.rollout_bridge --pictures 4 --steps 5000
 
-# 2b) BIGGEST LEVER — does a small LoRA on B break the frozen ceiling? (20 bits/slot)
+# 2) SCALING DOUBLING SWEEP — image size (slots) x vector content (tokens/slot).
+#    density=2 fixed, double the picture size:
+run scale_s16  runs/scaling/s16_w32.json   visual_encoder.wide_picture --slots 16  --window 32  --steps 2000
+run scale_s32  runs/scaling/s32_w64.json   visual_encoder.wide_picture --slots 32  --window 64  --steps 2000
+run scale_s64  runs/scaling/s64_w128.json  visual_encoder.wide_picture --slots 64  --window 128 --steps 2000
+run scale_s128 runs/scaling/s128_w256.json visual_encoder.wide_picture --slots 128 --window 256 --steps 2000
+#    slots=32 fixed, vary density (tokens/slot = 1,3,4; 2 already above):
+run scale_d1   runs/scaling/s32_w32.json   visual_encoder.wide_picture --slots 32 --window 32  --steps 2000
+run scale_d3   runs/scaling/s32_w96.json   visual_encoder.wide_picture --slots 32 --window 96  --steps 2000
+run scale_d4   runs/scaling/s32_w128.json  visual_encoder.wide_picture --slots 32 --window 128 --steps 2000
+commit "nightshift: scaling doubling sweep (image size x vector content)"
+
+# 3) biggest lever — receiver LoRA vs frozen at 20 bits/slot
 run receiver_lora runs/receiver_lora.json visual_encoder.receiver_lora --chars 64 --steps 3000
-
-# 3) bidirectional self-port (LP-3b)
+# 4) bidirectional self-port
 run bidirectional runs/bidirectional.json visual_encoder.bidirectional --steps 4000
-
-# 4) 6-picture rollout ceiling probe
-run rollout6 runs/rollout_bridge_6pic.json visual_encoder.rollout_bridge --pictures 6 --steps 5000
 
 milestone "NIGHTSHIFT COMPLETE"
