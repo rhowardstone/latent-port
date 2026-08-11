@@ -482,19 +482,48 @@ Qwen3-4B, both directions via one bridge. 57% char, 0% exact, generalizes
 (trained ≈ novel template ≈ 0.57). A real two-way vector link, but notably lossier
 than the one-way 4B→2B port (75%) — worth a follow-up.
 
-**Scaling doubling sweep (image size × vector content).** After fixing the training
-bug (coherent contiguous passages, not random concatenation — the flat-22% culprit;
-see the plan-change note below), fidelity climbs properly. Image-size axis (2
-tok/slot, density fixed), doubling the picture:
+**Scaling sweep — COMPLETE two-axis result** (`runs/scaling/*.json`; wide_picture,
+coherent contiguous passages after fixing the random-concatenation bug that stalled
+training flat at 22%). The two knobs behave oppositely:
 
-| picture | slots | message | char fidelity |
-| ---: | ---: | ---: | ---: |
-| patch | 16 | 32 tok | 0.791 |
-| 2× | 32 | 64 tok | 0.867 |
+**Image size** (vectors per picture; density fixed at 2 tok/slot):
 
-Doubling the picture (proportionally longer message, same density) does NOT degrade
-fidelity — it improves. s64/s128 + the density axis still running; full curve TBD.
-Early answer to "does the whole picture scale?": yes, so far.
+| slots | message | char fidelity |
+| ---: | ---: | ---: |
+| 16 | 32 tok | 0.791 |
+| 32 | 64 tok | 0.867 |
+| 64 | 128 tok | 0.858 |
+| 128 | 256 tok | 0.913 |
+
+Scales — even *improves* — as the picture grows 8×. Longer messages aren't a
+problem; just use more slots. Each slot = one KV position, so cost is linear in
+positions, not fidelity.
+
+**Density** (tokens packed per vector; slots fixed at 32):
+
+| tok/slot | message | char fidelity | trained? |
+| ---: | ---: | ---: | --- |
+| 1 | 32 tok | 0.980 | climbed 0.78→0.98 |
+| 2 | 64 tok | 0.867 | climbed 0.49→0.87 |
+| 3 | 96 tok | 0.258 | FLAT 0.24→0.26 |
+| 4 | 128 tok | 0.258 | FLAT 0.27→0.26 |
+
+**Sharp cliff between 2 and 3 tok/vector.** 1–2 tok/vector train fine (climb); 3–4
+plateau at ~0.26 from step 500 (never learn beyond the warm-start floor — 3 and 4
+land at identical 0.258). Consistent with the ~2-tokens/vector frozen ceiling seen
+throughout. Honesty caveat: at ≥3 tok/slot the mean warm start is weak (averaging 3+
+token embeddings is near information-free — the mechanism that collapsed LP-1's
+densest configs), so "fundamental frozen limit" vs "recipe can't reach it" is not
+cleanly separated. The receiver-LoRA result (0%→83% at high density) is the lever
+that should move this cliff.
+
+**Practical rule:** *widen the picture freely (scales, ~linear in positions); don't
+pack past ~2 tokens/vector unless you train the receiver.* The scaling cliff and the
+LoRA win are two views of the same ceiling.
+
+Note (density-axis confound): message length grows with density here (slots fixed),
+but the image-size axis shows longer messages don't hurt (improve), so the density
+drop is attributable to packing, not length.
 
 **Reproducibility packaging (2026-08-11).** Trained artifacts shipped as a GitHub
 Release (`trained-artifacts-2026-08-11`, 19 files / 463MB) — see `ARTIFACTS.md` for
