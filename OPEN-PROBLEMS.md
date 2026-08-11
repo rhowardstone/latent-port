@@ -404,6 +404,27 @@ visual-probe code already has this discipline; the latent side must match it).
 6. Outer code at 15–20 bits/slot after characterizing sub/trans/ins/del error mix.
 7. LP-5 bilevel (A6), then LP-4 dynamics (A9).
 
+## A13 — Does bits-per-vector scale with receiver size? (the leverage question)
+
+Every capacity number here is on a **2B** receiver. The efficiency case rests on an
+unmeasured slope: does readable density per vector *grow* with model size? Two
+hypotheses: (a) it scales with hidden width / richer semantics → the port gets more
+useful exactly as frontier models grow (the exciting version); (b) it's roughly
+scale-invariant because natural-language entropy is fixed → constant-factor forever.
+Clean, cheap experiment: run the LP-1 capacity sweep with receivers of increasing
+size (e.g. Qwen 0.6B → 1.7B → 4B → 8B as plain-text receivers, or the VL family),
+holding the sender/protocol fixed, and fit `readable_bits_per_vector(size)`. A
+positive slope is the headline that makes this matter at scale; a flat line is an
+honest ceiling. Pair with the frozen-vs-adapter comparison (A1/receiver LoRA):
+measure how much of the tap↔receiver gap a small adapter closes as size grows.
+
+Also worth measuring in the same rig: the honest **efficiency baseline** the port
+must beat — rendered-text-through-the-vision-tower (training-free) already compresses
+text; report positions-per-token for both so "the latent port is more efficient" is
+a measured comparison, not an assumption. And the **system-level** win (encode a
+document to vectors once, reuse across many queries/models — model-native KV reuse)
+is likely larger than any per-message ratio; spec it as its own experiment.
+
 ## Good first targets on an A100
 
 - **Fastest to a result:** Problem 4 (running) and Problem 3 (a ~9M-param

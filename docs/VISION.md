@@ -192,6 +192,21 @@ content-types + service-classes standardization sketch.
 
 Both may matter more than squeezing another couple bits/slot out of LP-1.
 
+## The scaling dream, honestly (2026-08-11)
+
+Two efficiency axes, kept separate so they don't secretly multiply: **context**
+(~2 tokens/vector measured → ~4× plausible with a receiver adapter, since the tap
+reads 2–3× what frozen B does — grounded headroom) and **generation** (only real if
+one vector-step advances *reasoning* by Δ>1 steps — the macro-step, unproven). These
+are constant factors, not exponential. The training-free **rendered-text** baseline
+already compresses text, so the port's edge today is meaning + adaptability +
+auditability, not raw compression. The largest real win is probably **system-level
+reuse** (encode once as vectors, reuse across models/queries — model-native KV
+cache; cf. Cache-to-Cache ~2× latency). The open question that decides how much this
+matters at the frontier: **does bits-per-vector grow with receiver size?** (A13). If
+yes, it gets better as models get bigger; if flat, it's a fixed constant. Measure
+before believing.
+
 ## Standing cautions carried from review
 
 - Don't call goodput a capacity; use the variational/GMI rate (A2).
