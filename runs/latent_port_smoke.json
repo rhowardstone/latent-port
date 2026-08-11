@@ -1,0 +1,47 @@
+{
+  "model": "Qwen/Qwen3-VL-2B-Instruct",
+  "experiment": "LP-1",
+  "results": [
+    {
+      "characters": 16,
+      "slots": 16,
+      "loaded_bits_per_slot": 5.0,
+      "steps": 40,
+      "batch_size": 16,
+      "sender_parameters": 7633409,
+      "train_seconds": 13.79439779696986,
+      "loss_curve": [
+        {
+          "step": 0,
+          "loss": 6.0866
+        },
+        {
+          "step": 39,
+          "loss": 4.7266
+        }
+      ],
+      "interim_evals": [],
+      "copy_control_exact": true,
+      "eval_samples": 4,
+      "exact_rate": 0.0,
+      "char_accuracy": 0.04032258064516131,
+      "net_exact_bits_per_slot": 0.0,
+      "text_tokens_for_same_payload": 11.25,
+      "text_baseline_bits_per_token": 7.111111111111111,
+      "examples": [
+        {
+          "payload": "J5H2TRP3TJOLOOGQ",
+          "decoded": "Z223233233333333333333333333333"
+        },
+        {
+          "payload": "FVDQXQS4XNBHRBU5",
+          "decoded": "Z2323332333333333333333333333333"
+        },
+        {
+          "payload": "VT34T46QLTKQPYRQ",
+          "decoded": "Z233232323232323232323232323232"
+        }
+      ]
+    }
+  ]
+}

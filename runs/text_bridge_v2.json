@@ -1,0 +1,79 @@
+{
+  "experiment": "LP-2 text bridge",
+  "window_a_tokens": 32,
+  "steps": 6000,
+  "bridge_parameters": 8679425,
+  "train_seconds": 1589.2428702199832,
+  "interim_evals": [
+    {
+      "step": 1000,
+      "exact_rate": 0.0,
+      "char_accuracy": 0.5937489281282644
+    },
+    {
+      "step": 2000,
+      "exact_rate": 0.0,
+      "char_accuracy": 0.6088971511449282
+    },
+    {
+      "step": 3000,
+      "exact_rate": 0.0,
+      "char_accuracy": 0.7221013056711245
+    },
+    {
+      "step": 4000,
+      "exact_rate": 0.0,
+      "char_accuracy": 0.731145262188573
+    },
+    {
+      "step": 5000,
+      "exact_rate": 0.0,
+      "char_accuracy": 0.7464845496378192
+    }
+  ],
+  "trained_template_eval": {
+    "eval_samples": 64,
+    "exact_rate": 0.0,
+    "char_accuracy": 0.7112849591337135,
+    "mean_b_tokens": 23.171875,
+    "slots": 16,
+    "position_compression_vs_text": 1.4482421875,
+    "examples": [
+      {
+        "sent": "Altar 5 is carved with two nobles , one of whom is probably Jasaw Chan K 'awiil I. They",
+        "decoded": "Alaric 5 is depicted with two nobles , one of whom is possibly Josafat Kan 'tai Ildi. Several"
+      },
+      {
+        "sent": "The rostrum of H. americanus bears one or more spines on the underside , which are lacking in H. gam",
+        "decoded": "The rostrum of H. hawaiiensis bears one or more spines on the underside , although it is lacking in H. gos**"
+      },
+      {
+        "sent": "The highest point on the island is in the north west at Virda Field , which rises to 87 metres (",
+        "decoded": "The highest point on the island is in the north east at Virdale Field , which rises to 875 ("
+      }
+    ]
+  },
+  "novel_template_eval": {
+    "eval_samples": 64,
+    "exact_rate": 0.0,
+    "char_accuracy": 0.7044636795268514,
+    "mean_b_tokens": 23.171875,
+    "slots": 16,
+    "position_compression_vs_text": 1.4482421875,
+    "examples": [
+      {
+        "sent": "Altar 5 is carved with two nobles , one of whom is probably Jasaw Chan K 'awiil I. They",
+        "decoded": "Alar 5 is carved with three nobles , one of which is possibly Jaswant K 'ai I . Several"
+      },
+      {
+        "sent": "The rostrum of H. americanus bears one or more spines on the underside , which are lacking in H. gam",
+        "decoded": "The rostrum of H. hawaiiensis bears one or more spines on the underside , although it is lacking in H. gos**"
+      },
+      {
+        "sent": "The highest point on the island is in the north west at Virda Field , which rises to 87 metres (",
+        "decoded": "The highest point on the island is in the north east at Virdale Field , which rises to 875 ("
+      }
+    ]
+  },
+  "bridge_checkpoint": "runs/bridges/lp2_text_16slots.pt"
+}

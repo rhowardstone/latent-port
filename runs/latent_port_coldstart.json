@@ -1,0 +1,294 @@
+{
+  "model": "Qwen/Qwen3-VL-2B-Instruct",
+  "experiment": "LP-1",
+  "results": [
+    {
+      "characters": 16,
+      "slots": 16,
+      "loaded_bits_per_slot": 5.0,
+      "steps": 3000,
+      "batch_size": 16,
+      "sender_parameters": 7633409,
+      "train_seconds": 574.755049092928,
+      "loss_curve": [
+        {
+          "step": 0,
+          "loss": 6.0866
+        },
+        {
+          "step": 50,
+          "loss": 4.5846
+        },
+        {
+          "step": 100,
+          "loss": 4.376
+        },
+        {
+          "step": 150,
+          "loss": 4.2639
+        },
+        {
+          "step": 200,
+          "loss": 4.5983
+        },
+        {
+          "step": 250,
+          "loss": 4.5137
+        },
+        {
+          "step": 300,
+          "loss": 4.6622
+        },
+        {
+          "step": 350,
+          "loss": 4.4957
+        },
+        {
+          "step": 400,
+          "loss": 4.4122
+        },
+        {
+          "step": 450,
+          "loss": 4.6516
+        },
+        {
+          "step": 500,
+          "loss": 4.3081
+        },
+        {
+          "step": 550,
+          "loss": 4.5474
+        },
+        {
+          "step": 600,
+          "loss": 4.503
+        },
+        {
+          "step": 650,
+          "loss": 4.5601
+        },
+        {
+          "step": 700,
+          "loss": 4.5381
+        },
+        {
+          "step": 750,
+          "loss": 4.5886
+        },
+        {
+          "step": 800,
+          "loss": 4.377
+        },
+        {
+          "step": 850,
+          "loss": 4.5372
+        },
+        {
+          "step": 900,
+          "loss": 4.5509
+        },
+        {
+          "step": 950,
+          "loss": 4.3683
+        },
+        {
+          "step": 1000,
+          "loss": 4.423
+        },
+        {
+          "step": 1050,
+          "loss": 4.2769
+        },
+        {
+          "step": 1100,
+          "loss": 4.1632
+        },
+        {
+          "step": 1150,
+          "loss": 4.1958
+        },
+        {
+          "step": 1200,
+          "loss": 4.2905
+        },
+        {
+          "step": 1250,
+          "loss": 4.2089
+        },
+        {
+          "step": 1300,
+          "loss": 3.7178
+        },
+        {
+          "step": 1350,
+          "loss": 3.9963
+        },
+        {
+          "step": 1400,
+          "loss": 3.8476
+        },
+        {
+          "step": 1450,
+          "loss": 3.8688
+        },
+        {
+          "step": 1500,
+          "loss": 3.5915
+        },
+        {
+          "step": 1550,
+          "loss": 3.6129
+        },
+        {
+          "step": 1600,
+          "loss": 3.5535
+        },
+        {
+          "step": 1650,
+          "loss": 3.6726
+        },
+        {
+          "step": 1700,
+          "loss": 3.778
+        },
+        {
+          "step": 1750,
+          "loss": 3.5496
+        },
+        {
+          "step": 1800,
+          "loss": 3.6566
+        },
+        {
+          "step": 1850,
+          "loss": 3.7668
+        },
+        {
+          "step": 1900,
+          "loss": 3.7246
+        },
+        {
+          "step": 1950,
+          "loss": 3.6612
+        },
+        {
+          "step": 2000,
+          "loss": 3.9481
+        },
+        {
+          "step": 2050,
+          "loss": 3.6655
+        },
+        {
+          "step": 2100,
+          "loss": 3.5975
+        },
+        {
+          "step": 2150,
+          "loss": 3.513
+        },
+        {
+          "step": 2200,
+          "loss": 3.4985
+        },
+        {
+          "step": 2250,
+          "loss": 3.7173
+        },
+        {
+          "step": 2300,
+          "loss": 3.6184
+        },
+        {
+          "step": 2350,
+          "loss": 3.6174
+        },
+        {
+          "step": 2400,
+          "loss": 3.7332
+        },
+        {
+          "step": 2450,
+          "loss": 3.4614
+        },
+        {
+          "step": 2500,
+          "loss": 3.5389
+        },
+        {
+          "step": 2550,
+          "loss": 3.7083
+        },
+        {
+          "step": 2600,
+          "loss": 3.3946
+        },
+        {
+          "step": 2650,
+          "loss": 3.5363
+        },
+        {
+          "step": 2700,
+          "loss": 3.6495
+        },
+        {
+          "step": 2750,
+          "loss": 3.4936
+        },
+        {
+          "step": 2800,
+          "loss": 3.5379
+        },
+        {
+          "step": 2850,
+          "loss": 3.6639
+        },
+        {
+          "step": 2900,
+          "loss": 3.5887
+        },
+        {
+          "step": 2950,
+          "loss": 3.3153
+        },
+        {
+          "step": 2999,
+          "loss": 3.7371
+        }
+      ],
+      "interim_evals": [
+        {
+          "step": 1000,
+          "exact_rate": 0.0,
+          "char_accuracy": 0.06614583333333335
+        },
+        {
+          "step": 2000,
+          "exact_rate": 0.0,
+          "char_accuracy": 0.17578125
+        }
+      ],
+      "copy_control_exact": true,
+      "eval_samples": 64,
+      "exact_rate": 0.0,
+      "char_accuracy": 0.1861328125,
+      "net_exact_bits_per_slot": 0.0,
+      "text_tokens_for_same_payload": 11.234375,
+      "text_baseline_bits_per_token": 7.1210013908205845,
+      "examples": [
+        {
+          "payload": "J5H2TRP3TJOLOOGQ",
+          "decoded": "Y5R2ZJF3ZJYJZJYI"
+        },
+        {
+          "payload": "FVDQXQS4XNBHRBU5",
+          "decoded": "JZJYJYJ4JYJYJYJ5"
+        },
+        {
+          "payload": "VT34T46QLTKQPYRQ",
+          "decoded": "JX34E46JYJYJYJYJ"
+        }
+      ]
+    }
+  ]
+}

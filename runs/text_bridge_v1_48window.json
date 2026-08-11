@@ -1,0 +1,74 @@
+{
+  "experiment": "LP-2 text bridge",
+  "window_a_tokens": 48,
+  "steps": 5000,
+  "bridge_parameters": 9203713,
+  "train_seconds": 1431.0127697670832,
+  "interim_evals": [
+    {
+      "step": 1000,
+      "exact_rate": 0.0,
+      "char_accuracy": 0.33845027799904454
+    },
+    {
+      "step": 2000,
+      "exact_rate": 0.0,
+      "char_accuracy": 0.4796744715595567
+    },
+    {
+      "step": 3000,
+      "exact_rate": 0.0,
+      "char_accuracy": 0.4921564977722588
+    },
+    {
+      "step": 4000,
+      "exact_rate": 0.0,
+      "char_accuracy": 0.5116152358207608
+    }
+  ],
+  "trained_template_eval": {
+    "eval_samples": 64,
+    "exact_rate": 0.0,
+    "char_accuracy": 0.4821106004611882,
+    "mean_b_tokens": 30.15625,
+    "slots": 16,
+    "position_compression_vs_text": 1.884765625,
+    "examples": [
+      {
+        "sent": "Altar 5 is carved with two nobles , one of whom is probably Jasaw Chan K 'awiil I. They are performing a ritual using the bones of an important woman . Altar",
+        "decoded": "Altar 9 is carved with two box pillars , one of which is named as Jaya Kanak ' Vijai I. They are a ceremony to perform the incantation of the dead . Most Art"
+      },
+      {
+        "sent": "The rostrum of H. americanus bears one or more spines on the underside , which are lacking in H. gammarus .",
+        "decoded": "The rostrum hump of P. pacificus has one or more spikes on the underside , which is herring in P. borgesi ."
+      },
+      {
+        "sent": "The highest point on the island is in the north west at Virda Field , which rises to 87 metres ( 285 feet ) . Virda is possibly from the Old",
+        "decoded": "The highest point on the island is in the north east of Vijiya Field , rising to 45 metres ( 150 feet ) . Vijiya Field is from the Old"
+      }
+    ]
+  },
+  "novel_template_eval": {
+    "eval_samples": 64,
+    "exact_rate": 0.0,
+    "char_accuracy": 0.4998697594310312,
+    "mean_b_tokens": 30.15625,
+    "slots": 16,
+    "position_compression_vs_text": 1.884765625,
+    "examples": [
+      {
+        "sent": "Altar 5 is carved with two nobles , one of whom is probably Jasaw Chan K 'awiil I. They are performing a ritual using the bones of an important woman . Altar",
+        "decoded": "Altar 6 is carved with two box pillars , one of which is named as Jaya Kanak ' Vijai I . They are a ceremony to perform the incantation of an ancient deity . Altar 6"
+      },
+      {
+        "sent": "The rostrum of H. americanus bears one or more spines on the underside , which are lacking in H. gammarus .",
+        "decoded": "The rosette hump of P. pacificus has one or more spikes on the underside , which is hatching in P. borgesi ."
+      },
+      {
+        "sent": "The highest point on the island is in the north west at Virda Field , which rises to 87 metres ( 285 feet ) . Virda is possibly from the Old",
+        "decoded": "The highest point on the island is in the north east of Vijiya Point , rising to 45 metres ( 150 feet ) . Vijiya Point is from the Old"
+      }
+    ]
+  },
+  "bridge_checkpoint": "runs/bridges/lp2_text_16slots.pt"
+}

@@ -1,0 +1,62 @@
+{
+  "experiment": "LP-3a",
+  "bridge_kind": "gather",
+  "sender_model": "Qwen/Qwen3-0.6B",
+  "receiver_model": "Qwen/Qwen3-VL-2B-Instruct",
+  "a_layer": -1,
+  "characters": 32,
+  "steps": 3000,
+  "warmstart_steps": 800,
+  "bridge_parameters": 8679425,
+  "train_seconds": 800.6114203480538,
+  "interim_evals": [
+    {
+      "step": 500,
+      "exact_rate": 0.375,
+      "char_accuracy": 0.9441810104723708
+    },
+    {
+      "step": 1000,
+      "exact_rate": 0.3125,
+      "char_accuracy": 0.9612264650178253
+    },
+    {
+      "step": 1500,
+      "exact_rate": 0.6875,
+      "char_accuracy": 0.9727746212121212
+    },
+    {
+      "step": 2000,
+      "exact_rate": 0.8125,
+      "char_accuracy": 0.986328125
+    },
+    {
+      "step": 2500,
+      "exact_rate": 0.875,
+      "char_accuracy": 0.990234375
+    }
+  ],
+  "bridge_checkpoint": "runs/bridges/lp3_32chars_16slots.pt",
+  "eval_samples": 64,
+  "exact_rate": 0.75,
+  "char_accuracy": 0.9868459990530303,
+  "mean_a_tokens": 43.0,
+  "slots": 16,
+  "position_compression_vs_a": 2.6875,
+  "loaded_bits_per_slot": 10.0,
+  "net_exact_bits_per_slot": 7.5,
+  "examples": [
+    {
+      "payload": "WUV2OVN5UWKQGY4W2PKD5V2EFYL6ZY2H",
+      "decoded": "WUV2OVN5UWKQGY4W2PKD5V2EFYL6ZY2H"
+    },
+    {
+      "payload": "EPHKFBQ4RW3HJDBBZ2MELEET3OVDEZFI",
+      "decoded": "EPHKFBQ4RW3HJDBBZ2MELEET3OVDEZFI"
+    },
+    {
+      "payload": "J5D3TBUWNMCHYTBLX44TM3BBXTHNNS4W",
+      "decoded": "J5D3TBUWNMCHYTBLX44TM3BBXTHNNS4W"
+    }
+  ]
+}

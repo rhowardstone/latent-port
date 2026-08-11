@@ -1,0 +1,177 @@
+{
+  "experiment": "LP-1 wiretap",
+  "results": [
+    {
+      "characters": 16,
+      "slots": 16,
+      "loaded_bits_per_slot": 5.0,
+      "tap_parameters": 2116384,
+      "tap_exact_rate": 1.0,
+      "tap_char_accuracy": 1.0,
+      "mean_confidence": 0.9999994663521647,
+      "mean_z": 1.0000605592504144,
+      "calibration_bins": {
+        "0.9": 1.0
+      },
+      "receiver_exact_rate": 0.890625,
+      "receiver_char_accuracy": 0.9923598345588236,
+      "ood": [
+        {
+          "traffic": "own protocol",
+          "mean_confidence": 0.9999994039535522,
+          "mean_z": 1.0078787803649902
+        },
+        {
+          "traffic": "drifted protocol (32-char sender)",
+          "mean_confidence": 0.795168399810791,
+          "mean_z": 1.992814302444458
+        },
+        {
+          "traffic": "drifted protocol (48-char sender)",
+          "mean_confidence": 0.5572229623794556,
+          "mean_z": 2.0260980129241943
+        },
+        {
+          "traffic": "drifted protocol (64-char sender)",
+          "mean_confidence": 0.7298572659492493,
+          "mean_z": 2.069120168685913
+        },
+        {
+          "traffic": "noise (jamming)",
+          "mean_confidence": 0.4423576593399048,
+          "mean_z": 2.307100772857666
+        }
+      ],
+      "tap_checkpoint": "runs/wiretaps/tap_16chars.pt"
+    },
+    {
+      "characters": 32,
+      "slots": 16,
+      "loaded_bits_per_slot": 10.0,
+      "tap_parameters": 2124608,
+      "tap_exact_rate": 1.0,
+      "tap_char_accuracy": 1.0,
+      "mean_confidence": 0.9999978952109814,
+      "mean_z": 0.9968928853049874,
+      "calibration_bins": {
+        "0.9": 1.0
+      },
+      "receiver_exact_rate": 0.71875,
+      "receiver_char_accuracy": 0.9874526515151515,
+      "ood": [
+        {
+          "traffic": "own protocol",
+          "mean_confidence": 0.9999980330467224,
+          "mean_z": 1.006253957748413
+        },
+        {
+          "traffic": "drifted protocol (16-char sender)",
+          "mean_confidence": 0.8851808905601501,
+          "mean_z": 2.285362720489502
+        },
+        {
+          "traffic": "drifted protocol (48-char sender)",
+          "mean_confidence": 0.8323560953140259,
+          "mean_z": 1.6361414194107056
+        },
+        {
+          "traffic": "drifted protocol (64-char sender)",
+          "mean_confidence": 0.7539397478103638,
+          "mean_z": 1.9588489532470703
+        },
+        {
+          "traffic": "noise (jamming)",
+          "mean_confidence": 0.6286320686340332,
+          "mean_z": 2.377706527709961
+        }
+      ],
+      "tap_checkpoint": "runs/wiretaps/tap_32chars.pt"
+    },
+    {
+      "characters": 48,
+      "slots": 16,
+      "loaded_bits_per_slot": 15.0,
+      "tap_parameters": 2132832,
+      "tap_exact_rate": 0.984375,
+      "tap_char_accuracy": 0.9996744791666666,
+      "mean_confidence": 0.9995340788736939,
+      "mean_z": 0.9995697671547532,
+      "calibration_bins": {
+        "0.9": 0.9997
+      },
+      "receiver_exact_rate": 0.421875,
+      "receiver_char_accuracy": 0.9708354591836734,
+      "ood": [
+        {
+          "traffic": "own protocol",
+          "mean_confidence": 0.9995125532150269,
+          "mean_z": 1.0005067586898804
+        },
+        {
+          "traffic": "drifted protocol (16-char sender)",
+          "mean_confidence": 0.6995634436607361,
+          "mean_z": 3.4094834327697754
+        },
+        {
+          "traffic": "drifted protocol (32-char sender)",
+          "mean_confidence": 0.8861880898475647,
+          "mean_z": 2.5731046199798584
+        },
+        {
+          "traffic": "drifted protocol (64-char sender)",
+          "mean_confidence": 0.8366648554801941,
+          "mean_z": 2.1781866550445557
+        },
+        {
+          "traffic": "noise (jamming)",
+          "mean_confidence": 0.7164335250854492,
+          "mean_z": 3.2627625465393066
+        }
+      ],
+      "tap_checkpoint": "runs/wiretaps/tap_48chars.pt"
+    },
+    {
+      "characters": 64,
+      "slots": 16,
+      "loaded_bits_per_slot": 20.0,
+      "tap_parameters": 2141056,
+      "tap_exact_rate": 1.0,
+      "tap_char_accuracy": 1.0,
+      "mean_confidence": 0.9993584156036377,
+      "mean_z": 1.0025540925562382,
+      "calibration_bins": {
+        "0.9": 1.0
+      },
+      "receiver_exact_rate": 0.046875,
+      "receiver_char_accuracy": 0.9323680388621796,
+      "ood": [
+        {
+          "traffic": "own protocol",
+          "mean_confidence": 0.9991952776908875,
+          "mean_z": 1.0000920295715332
+        },
+        {
+          "traffic": "drifted protocol (16-char sender)",
+          "mean_confidence": 0.7866531014442444,
+          "mean_z": 4.3066558837890625
+        },
+        {
+          "traffic": "drifted protocol (32-char sender)",
+          "mean_confidence": 0.85866379737854,
+          "mean_z": 3.6752431392669678
+        },
+        {
+          "traffic": "drifted protocol (48-char sender)",
+          "mean_confidence": 0.8849220275878906,
+          "mean_z": 2.758953094482422
+        },
+        {
+          "traffic": "noise (jamming)",
+          "mean_confidence": 0.7656987309455872,
+          "mean_z": 4.236642360687256
+        }
+      ],
+      "tap_checkpoint": "runs/wiretaps/tap_64chars.pt"
+    }
+  ]
+}

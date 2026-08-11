@@ -1,0 +1,33 @@
+{
+  "experiment": "LP-1 wiretap",
+  "results": [
+    {
+      "characters": 96,
+      "slots": 16,
+      "loaded_bits_per_slot": 30.0,
+      "tap_parameters": 2157504,
+      "tap_exact_rate": 0.0,
+      "tap_char_accuracy": 0.95361328125,
+      "mean_confidence": 0.9526228001341224,
+      "mean_z": 1.0072972606867552,
+      "calibration_bins": {
+        "0.9": 0.9536
+      },
+      "receiver_exact_rate": 0.0,
+      "receiver_char_accuracy": 0.3258688515647894,
+      "ood": [
+        {
+          "traffic": "own protocol",
+          "mean_confidence": 0.9562573432922363,
+          "mean_z": 0.9986897706985474
+        },
+        {
+          "traffic": "noise (jamming)",
+          "mean_confidence": 0.8913096189498901,
+          "mean_z": 7.8539886474609375
+        }
+      ],
+      "tap_checkpoint": "runs/wiretaps/tap_96chars.pt"
+    }
+  ]
+}

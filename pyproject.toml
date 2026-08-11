@@ -1,0 +1,28 @@
+[project]
+name = "visual-channel-lab"
+version = "0.1.0"
+description = "Measure how much exact information survives a VLM visual-token bottleneck."
+requires-python = ">=3.10"
+dependencies = [
+  "fastapi>=0.110",
+  "numpy>=1.24",
+  "pillow>=10",
+  "torch>=2.2",
+  "transformers>=4.57",
+  "uvicorn>=0.29",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+visual-channel-web = "visual_encoder.web:main"
+visual-channel-probe = "visual_encoder.qwen_probe:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+

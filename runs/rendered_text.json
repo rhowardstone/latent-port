@@ -1,0 +1,65 @@
+{
+  "model": "Qwen/Qwen3-VL-2B-Instruct",
+  "attention_implementation": "flash_attention_2",
+  "font": "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
+  "font_size": 12,
+  "results": [
+    {
+      "characters": 64,
+      "source_bits": 320,
+      "visual_tokens": 256,
+      "source_bits_per_visual_token": 1.25,
+      "exact": false,
+      "edit_distance": 3,
+      "character_accuracy": 0.953125,
+      "recovered_characters": 63,
+      "seconds": 13.533230399014428,
+      "layout": {
+        "columns": 70,
+        "rows": 41,
+        "character_capacity": 2870,
+        "char_width": 7,
+        "line_height": 12
+      },
+      "raw_output": "C7506K5UM7DPHV3LSY5J4Y4FNKPRKUT3RBBDANZKDJOV EYPMARTAR4ISDQB4GPAJ"
+    },
+    {
+      "characters": 128,
+      "source_bits": 640,
+      "visual_tokens": 256,
+      "source_bits_per_visual_token": 2.5,
+      "exact": false,
+      "edit_distance": 7,
+      "character_accuracy": 0.9453125,
+      "recovered_characters": 125,
+      "seconds": 13.462232678895816,
+      "layout": {
+        "columns": 70,
+        "rows": 41,
+        "character_capacity": 2870,
+        "char_width": 7,
+        "line_height": 12
+      },
+      "raw_output": "USMFVVTJYH6TNA47TWGRDYCKSXIAcQXFVYGxE3XMV7MMZV5HYBEIPOKXP3LEZZ6GSRK05JYBF17LHF5SDANAOW75X5Q5KZIZJKA723NU4DIgK2RGLQIBUT1GEZWJTfUY"
+    },
+    {
+      "characters": 256,
+      "source_bits": 1280,
+      "visual_tokens": 256,
+      "source_bits_per_visual_token": 5.0,
+      "exact": false,
+      "edit_distance": 21,
+      "character_accuracy": 0.91796875,
+      "recovered_characters": 244,
+      "seconds": 17.371223205933347,
+      "layout": {
+        "columns": 70,
+        "rows": 41,
+        "character_capacity": 2870,
+        "char_width": 7,
+        "line_height": 12
+      },
+      "raw_output": "X050BCAMQE5KAVHDQYKB4X3PHWNT24N2URDK4T2P5UF3BBSWXCKGBUYQANBRRAP3RH5T2F2YX7W7BZH7EKT2KNA2H1FXUNQZB6RDTE0I2E6S75ZDTM7V3LRQHIQNWPKYEAGWA7Y7H4U0T5ASSL3D0TCV3VY20NE3032PXZY0ZNDTUE2KRT2RZXJA6R0JY6CPO0ZPFOZBEN3WSYIWCWSLSRWM545UZ54TJKDDGJGZT7GZWTQ2JCJQ0EXUHTQJ3J4X"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "experiment": "LP-2 text wiretap",
+  "tap_parameters": 8408577,
+  "tap_exact_rate": 0.0,
+  "tap_char_accuracy": 0.5528254333897188,
+  "mean_confidence": 0.896180191077292,
+  "mean_z": 0.997888682410121,
+  "noise_confidence": 0.5126248002052307,
+  "noise_z": 89.07941436767578,
+  "examples": [
+    {
+      "sent": "Group Q is a twin @-@ pyramid complex , and is one of the largest at Tikal . It was built by Y",
+      "tap_read": "Evidence Team is a twin @-@board model , and is one of the large at Tik.tokenize . It was builtayo K"
+    },
+    {
+      "sent": "Culture versus Economism : Essays on Marxism in the Multicultural Arena. with Elisabeth Lloyd . Indigena Press . 1",
+      "tap_read": "Natural and polymism : Essays of Debate in the machically Way.@ Elis Jeffrey Howell . Indienist Books . 1"
+    },
+    {
+      "sent": "Thelnetham Mill is open to the public on Easter Monday , the Sunday of the late May and August bank holidays and the",
+      "tap_read": "Enenishon Hill is open to the immediate on April evening , the Friday of the last\u591c and Thursday bank playoffs and the"
+    }
+  ],
+  "tap_checkpoint": "runs/wiretaps/tap_text_16slots.pt"
+}

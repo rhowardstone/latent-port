@@ -1,0 +1,53 @@
+{
+  "experiment": "LP-2 text bridge",
+  "window_a_tokens": 48,
+  "steps": 200,
+  "bridge_parameters": 9203713,
+  "train_seconds": 53.885368200019,
+  "interim_evals": [],
+  "trained_template_eval": {
+    "eval_samples": 4,
+    "exact_rate": 0.0,
+    "char_accuracy": 0.22443582170369478,
+    "mean_b_tokens": 23.25,
+    "slots": 16,
+    "position_compression_vs_text": 1.453125,
+    "examples": [
+      {
+        "sent": "Meridian has produced or hosted many famous people in the arts and other areas . For example :",
+        "decoded": "The first known use of the term ' siren ' in the context of a woman was in the 18th century ."
+      },
+      {
+        "sent": "9 West End Historic District \u2014 roughly bounded by 7th St , 28th Ave , Shearer 's Branch , and 5th St.",
+        "decoded": "The first known use of the term \" modern \" in the context of the United States was in 1870 , when the U .S. Congress passed a law to establish a modern system of"
+      },
+      {
+        "sent": "Churchill , Ward ( November 1998 ) . \" Smoke Signals : A History of Native Americans in Cinema \" . LiP Magazine .",
+        "decoded": "The 1997 season was the first season of the new league ."
+      }
+    ]
+  },
+  "novel_template_eval": {
+    "eval_samples": 4,
+    "exact_rate": 0.0,
+    "char_accuracy": 0.25612047237971897,
+    "mean_b_tokens": 23.25,
+    "slots": 16,
+    "position_compression_vs_text": 1.453125,
+    "examples": [
+      {
+        "sent": "Meridian has produced or hosted many famous people in the arts and other areas . For example :",
+        "decoded": "The 2007 season was the 10th season of the team 's existence ."
+      },
+      {
+        "sent": "9 West End Historic District \u2014 roughly bounded by 7th St , 28th Ave , Shearer 's Branch , and 5th St.",
+        "decoded": "The following is a list of the most popular songs by the band ."
+      },
+      {
+        "sent": "Churchill , Ward ( November 1998 ) . \" Smoke Signals : A History of Native Americans in Cinema \" . LiP Magazine .",
+        "decoded": "The following is a list of the most popular songs by the band ."
+      }
+    ]
+  },
+  "bridge_checkpoint": "runs/bridges/lp2_text_16slots.pt"
+}
