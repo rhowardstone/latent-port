@@ -295,32 +295,42 @@ def char_embedding_table(model, tokenizer, device) -> torch.Tensor:
 
 
 def warmstart_targets(
-    payloads: list[str], slots: int, char_table: torch.Tensor, order: str = "mean"
+    payloads: list[str], slots: int, char_table: torch.Tensor,
+    order: str = "mean", eps: float = 1.0,
 ) -> torch.Tensor:
     """Per-slot warm-start target, [batch, slots, d].
 
-    order="mean": average the slot's chunk char embeddings. This is
-    PERMUTATION-INVARIANT — z(AB)=z(BA) — so it erases sub-slot order before CE
-    training, a confound for any binding claim (external review, 2026-08-10).
+    order="mean": average the slot's chunk char embeddings. PERMUTATION-INVARIANT
+    — z(AB)=z(BA) — so it erases sub-slot order before CE, a confound for any
+    binding claim (external review, 2026-08-10).
 
-    order="role": (1/sqrt m) * sum_j roll(e(c_j), shift_j). Each sub-slot
-    position j gets a distinct fixed circular shift (an orthogonal role binding,
-    HRR-style), so the target is order-SENSITIVE. Use this as the control that
-    tells whether transposition failures are intrinsic to the frozen receiver or
-    manufactured by the mean warm start.
+    order="role": (1/sqrt m) * sum_j roll(e(c_j), shift_j). Distinct fixed
+    circular shift per sub-slot position (orthogonal role binding, HRR-style) →
+    order-SENSITIVE. But a dimension roll is orthogonal, NOT semantic (Qwen's
+    embedding coords aren't rotation-invariant), so pure role may start far off
+    B's native geometry.
+
+    order="blend": RMSNorm[(1-eps)*mean + eps*role], eps in (0,1]. The gentle
+    control — inject only a little order into an otherwise on-manifold target.
+    If tiny eps kills transpositions, the binding fix is nearly free.
     """
     indices = torch.tensor(
         [[BASE32_ALPHABET.index(c) for c in payload] for payload in payloads],
         device=char_table.device,
     )
     chunks = char_table[indices].reshape(len(payloads), slots, -1, char_table.shape[-1])
+    mean_t = chunks.mean(dim=2)
     if order == "mean":
-        return chunks.mean(dim=2)
+        return mean_t
+    m, d = chunks.shape[2], chunks.shape[3]
+    shifts = [(j * (d // (m + 1))) for j in range(m)]
+    role_t = torch.stack([chunks[:, :, j].roll(shifts[j], dims=-1) for j in range(m)], dim=2).sum(dim=2) / (m ** 0.5)
     if order == "role":
-        m, d = chunks.shape[2], chunks.shape[3]
-        shifts = [(j * (d // (m + 1))) for j in range(m)]
-        rolled = torch.stack([chunks[:, :, j].roll(shifts[j], dims=-1) for j in range(m)], dim=2)
-        return rolled.sum(dim=2) / (m ** 0.5)
+        return role_t
+    if order == "blend":
+        mixed = (1.0 - eps) * mean_t + eps * role_t
+        rms = mixed.pow(2).mean(dim=-1, keepdim=True).clamp_min(1e-8).sqrt()
+        return mixed / rms * mean_t.pow(2).mean(dim=-1, keepdim=True).clamp_min(1e-8).sqrt()
     raise ValueError(f"unknown warm-start order: {order}")
 
 
@@ -349,28 +359,64 @@ def damerau_levenshtein(a: str, b: str) -> int:
     return d[len(a) + 1][len(b) + 1]
 
 
+def _nw_align(payload: str, decoded: str) -> list[tuple[int | None, int | None]]:
+    """Needleman-Wunsch alignment; returns (payload_idx|None, decoded_idx|None) pairs.
+
+    Aligning first means an insertion/deletion shifts one position instead of
+    masquerading as a whole-slot content+order failure (external review, matters
+    at the 30-bit regime).
+    """
+    n, mlen = len(payload), len(decoded)
+    dp = [[0] * (mlen + 1) for _ in range(n + 1)]
+    for i in range(n + 1):
+        dp[i][0] = i
+    for j in range(mlen + 1):
+        dp[0][j] = j
+    for i in range(1, n + 1):
+        for j in range(1, mlen + 1):
+            cost = 0 if payload[i - 1] == decoded[j - 1] else 1
+            dp[i][j] = min(dp[i - 1][j - 1] + cost, dp[i - 1][j] + 1, dp[i][j - 1] + 1)
+    i, j, pairs = n, mlen, []
+    while i > 0 or j > 0:
+        if i > 0 and j > 0 and dp[i][j] == dp[i - 1][j - 1] + (0 if payload[i - 1] == decoded[j - 1] else 1):
+            pairs.append((i - 1, j - 1)); i -= 1; j -= 1
+        elif i > 0 and dp[i][j] == dp[i - 1][j] + 1:
+            pairs.append((i - 1, None)); i -= 1
+        else:
+            pairs.append((None, j - 1)); j -= 1
+    return pairs[::-1]
+
+
 def content_vs_order(payload: str, decoded: str, slots: int) -> dict:
-    """Separate content errors (wrong char multiset) from pure ordering errors."""
+    """Separate content errors (wrong char multiset) from pure ordering errors,
+    after edit-aligning decoded to payload so indels don't masquerade."""
     from collections import Counter
 
-    if len(payload) % slots or not decoded:
-        return {"unordered_char_accuracy": 0.0, "transposition_share": 0.0}
+    if not payload or len(payload) % slots:
+        return {"unordered_char_accuracy": 0.0, "order_error_share": 0.0, "transposition_share": 0.0}
     m = len(payload) // slots
-    unordered_hits, order_only = 0, 0
-    dec = decoded[: len(payload)].ljust(len(payload))
+    total = len(payload)
+    if not decoded:
+        return {"unordered_char_accuracy": 0.0, "order_error_share": 0.0, "transposition_share": 0.0}
+    # Map each payload position to its aligned decoded char (or None for a deletion).
+    aligned = [None] * total
+    positional_hits = 0
+    for pi, dj in _nw_align(payload, decoded):
+        if pi is not None and dj is not None:
+            aligned[pi] = decoded[dj]
+            if decoded[dj] == payload[pi]:
+                positional_hits += 1
+    unordered_hits = 0
     for s in range(slots):
         p = payload[s * m : (s + 1) * m]
-        q = dec[s * m : (s + 1) * m]
-        shared = sum((Counter(p) & Counter(q)).values())
-        unordered_hits += shared
-        # of the positions whose content is present in the slot, how many are misordered
-        order_only += shared - sum(1 for x, y in zip(p, q) if x == y)
-    total = len(payload)
+        q = [c for c in aligned[s * m : (s + 1) * m] if c is not None]
+        unordered_hits += sum((Counter(p) & Counter(q)).values())
     dl = damerau_levenshtein(payload, decoded)
     lev = levenshtein(payload, decoded)
     return {
         "unordered_char_accuracy": unordered_hits / total,
-        "order_error_share": order_only / total,
+        # content present in the right slot but positionally wrong = ordering failure
+        "order_error_share": max(0, unordered_hits - positional_hits) / total,
         # transpositions cost 1 in DL but 2 in Levenshtein; the gap flags them
         "transposition_share": max(0, lev - dl) / max(1, lev),
     }
@@ -398,7 +444,7 @@ def run_config(model, tokenizer, args, characters: int) -> dict:
             latents = sender(bits)
             warm_loss = nn.functional.mse_loss(
                 latents.float(),
-                warmstart_targets(payloads, args.slots, char_table, order=args.warmstart_order),
+                warmstart_targets(payloads, args.slots, char_table, order=args.warmstart_order, eps=args.warmstart_eps),
             )
             warm_optimizer.zero_grad(set_to_none=True)
             warm_loss.backward()
@@ -493,9 +539,12 @@ def main() -> None:
     parser.add_argument("--hidden", type=int, default=512)
     parser.add_argument("--steps", type=int, default=1200)
     parser.add_argument("--warmstart-steps", type=int, default=500)
-    parser.add_argument("--warmstart-order", choices=("mean", "role", "none"), default="mean",
+    parser.add_argument("--warmstart-order", choices=("mean", "role", "blend", "none"), default="mean",
                         help="binding control: 'mean' is permutation-invariant (confound); "
-                             "'role' preserves sub-slot order; 'none' skips warm start")
+                             "'role' preserves sub-slot order; 'blend' mixes them by --warmstart-eps; "
+                             "'none' skips warm start")
+    parser.add_argument("--warmstart-eps", type=float, default=1.0,
+                        help="blend fraction of the order-preserving target (0=mean, 1=role)")
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--warmup", type=int, default=50)

@@ -16,7 +16,9 @@ every claim in the docs cites a JSON artifact in `runs/`.
 **Read first:** [`NOTEBOOK.md`](NOTEBOOK.md) — the full chronological lab
 notebook. **For reviewers:** [`OPEN-PROBLEMS.md`](OPEN-PROBLEMS.md) — the open
 questions stated mathematically, with measured constants and proposed
-experiments.
+experiments. **For the "why":** [`docs/VISION.md`](docs/VISION.md) — the
+conceptual arc, the self-port rollout and MoE-colony directions, and the safety
+frame. Review records live in [`reviews/`](reviews/).
 
 ## Headline results (as of 2026-08-10)
 
@@ -25,7 +27,7 @@ experiments.
 | Random-bit capacity through a frozen receiver peaks at | **7.19 net exact bits/position** (≈ text density) at 10 bits/slot load | `runs/latent_port.json` |
 | The vectors physically carry more than the frozen receiver reads | tap decodes **100%** at 20 bits/slot where receiver gets 4.7% | `runs/wiretap.json` |
 | Cross-model port (0.6B hidden states → 2B receiver) | **75% exact** at 10 bits/slot — matches the direct sender | `runs/latent_bridge.json` |
-| Free-text port (arbitrary sentences, 2 A-tokens per vector) | 72–78% char fidelity; meaning survives, rare tokens smear | `runs/text_bridge.json` |
+| Free-text port (arbitrary sentences, 2 A-tokens per vector) | **71.6/72.4%** char fidelity (wikitext, trained/novel template); meaning survives, rare tokens smear | `runs/text_bridge.json` |
 | Independent wiretap on all bit-packed protocols | ~100% decode; drift z-gauge separates protocols at z ≥ 1.6 vs 1.0 | `runs/wiretap*.json` |
 | Content stays *per-slot* at every working density; what fails is within-slot **order** | transposition-dominated errors at 20 bits/slot | `runs/lens/` figures |
 | Live two-model demo with tapped wire | orange/password/multi-packet transcripts | `visual_encoder/psychic_demo.py` |
@@ -75,13 +77,14 @@ Models download from Hugging Face on first use. Seeds are fixed throughout;
 payloads are held out by construction (train and eval draw from disjoint
 seeded streams).
 
-**Test coverage is honest about its scope:** the 31 pytest cases cover pure
-helpers (bit packing, probe algebra, codecs, the manifold gauge) — *not* the
-headline experiments, which need a GPU and downloaded models. Treat "tests pass"
-as helper-level regression, not validation of the capacity claims; those live in
-`runs/` artifacts and are reproduced by the `python -m` commands above. A GPU
-smoke-suite for the bridges/taps/demo is an open task (see
-`reviews/2026-08-10-external-review.md`).
+**Test coverage is honest about its scope:** the 35 pytest cases cover pure
+helpers (bit packing, probe algebra, codecs, the manifold gauge, the
+binding-control metrics) — *not* the headline experiments, which need a GPU and
+downloaded models. Treat "tests pass" as helper-level regression, not validation
+of the capacity claims; those live in `runs/` artifacts and are reproduced by the
+`python -m` commands above. A GPU smoke-suite and CI are open tasks (see
+`reviews/`). Note: LP-2 fidelity is the artifact-backed wikitext number
+(71.6/72.4%); an earlier chat-register figure was withdrawn for a provenance gap.
 
 ## Reviews & collaboration
 
