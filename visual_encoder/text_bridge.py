@@ -282,7 +282,8 @@ def main() -> None:
                 ).input_ids.to(args.device)
                 tap_logits = reference_tap(latents.float(), a_embed_table)
                 loss = loss + args.legibility_weight * nn.functional.cross_entropy(
-                    tap_logits.reshape(-1, tap_logits.shape[-1]), window_ids.reshape(-1)
+                    tap_logits.reshape(-1, tap_logits.shape[-1]), window_ids.reshape(-1),
+                    ignore_index=brain.tokenizer.pad_token_id,
                 )
         optimizer.zero_grad(set_to_none=True)
         loss.backward()

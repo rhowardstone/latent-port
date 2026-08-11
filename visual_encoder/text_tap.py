@@ -95,6 +95,7 @@ def main() -> None:
         ).input_ids.to(device)
         return bridge(states, mask).float(), ids
 
+    pad_id = brain.tokenizer.pad_token_id
     tap = TextWiretap(d_model, positions, brain.width).to(device)
     optimizer = torch.optim.AdamW(tap.parameters(), lr=args.lr)
     started = time.monotonic()
@@ -103,8 +104,10 @@ def main() -> None:
         texts = [train_snippets[i] for i in rng.integers(0, len(train_snippets), args.batch_size)]
         latents, ids = traffic(texts)
         logits = tap(latents, embed_table)
+        # Ignore pad positions: predicting padding is trivial and would inflate
+        # both the tap's apparent confidence and the LP-5a legibility signal.
         loss = nn.functional.cross_entropy(
-            logits.reshape(-1, logits.shape[-1]), ids.reshape(-1)
+            logits.reshape(-1, logits.shape[-1]), ids.reshape(-1), ignore_index=pad_id
         )
         optimizer.zero_grad(set_to_none=True)
         loss.backward()

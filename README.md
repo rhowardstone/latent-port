@@ -75,6 +75,21 @@ Models download from Hugging Face on first use. Seeds are fixed throughout;
 payloads are held out by construction (train and eval draw from disjoint
 seeded streams).
 
+**Test coverage is honest about its scope:** the 31 pytest cases cover pure
+helpers (bit packing, probe algebra, codecs, the manifold gauge) — *not* the
+headline experiments, which need a GPU and downloaded models. Treat "tests pass"
+as helper-level regression, not validation of the capacity claims; those live in
+`runs/` artifacts and are reproduced by the `python -m` commands above. A GPU
+smoke-suite for the bridges/taps/demo is an open task (see
+`reviews/2026-08-10-external-review.md`).
+
+## Reviews & collaboration
+
+External review findings and their resolutions are tracked in
+[`reviews/`](reviews/). Collaborating instances: read the latest review file and
+`OPEN-PROBLEMS.md` before starting, and add a review file rather than editing
+someone else's.
+
 ## Safety framing
 
 This lab treats *legibility of AI-to-AI communication* as a measurable property,

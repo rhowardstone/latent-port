@@ -196,11 +196,42 @@ makes this immediately buildable here.
 | bridge params | perceiver/gather bridge | ~9–10 M |
 | tap params | independent wiretap | ~2–8 M |
 
-Definitions. `H₂` = binary entropy. `BER(b)` = bit error rate at load `b`.
-`R(b) = b·(1−H₂(BER(b)))` is a BSC-equivalent rate, **not** a certified Shannon
-capacity (errors within one image/message are correlated — see notebook caveats).
-`I(·;·)` = mutual information. A "position/slot" is one KV cache entry, the same
-resource a text token consumes.
+Definitions and a metric-naming correction (thanks to external review, 2026-08-10).
+Two distinct quantities were previously both written `R(b)`; they are different and
+now kept separate:
+
+- **Packet goodput** `G(b) = b · P[whole packet decoded exactly]`. This is what the
+  JSON field `net_exact_bits_per_slot` reports (LP-1/LP-2/LP-3). All-or-nothing per
+  message. The "7.19 net exact bits/position" headline is a `G` value.
+- **BSC-equivalent rate** `R_BSC(b) = b · (1 − H₂(BER(b)))`, `BER` = per-bit error
+  rate. This is the visual-probe side's metric (`bsc_equivalent_rate` in
+  `qwen_probe.py`) and is explicitly *only* a binary-symmetric-channel equivalent —
+  **not** a certified Shannon capacity, since errors within one message are
+  correlated. `G` and `R_BSC` are not comparable point-for-point.
+
+`H₂` = binary entropy. `I(·;·)` = mutual information. A "position/slot" is one KV
+cache entry, the same resource a text token consumes.
+
+**Metric standardization (open task, from review).** The latent experiments should
+report the same hierarchy the visual side already uses: packet-exact rate, per-bit/
+per-symbol error, an empirical conditional-entropy / generalized-MI estimate of
+`I(payload; \hat{payload})`, and **cluster-bootstrap CIs** (resampling whole
+messages, since intra-message errors are correlated). Until then, treat single
+point estimates here as indicative, not certified.
+
+**Detector honesty (from review).** The trust gauge is **not** a single universal
+`conf ≥ 0.99` rule. The bit-packed tap calibrates near `conf ≥ 0.99 ∧ z ≤ 1.5`; the
+lower-confidence free-text tap uses `conf ≥ 0.5 ∧ z ≤ 1.5` in the demo. The
+threshold is **per-tap-calibrated**; the `z`-gauge (on-manifold Mahalanobis-rms) is
+the more portable half. Problem 6 is exactly about replacing these hand-set
+thresholds with a false-positive-controlled detector.
+
+**Cross-model scope (from review).** LP-3's working bridge is `GatherBridge`, which
+reads A's states at **known, fixed token positions** (the learned-alignment Perceiver
+collapsed to a constant — see notebook). So LP-3a demonstrates representation
+translation **under known alignment**, not yet a general variable-length
+mind-to-mind interface. Recovering learned alignment is an open sub-problem (its
+failure mode — attention-sink collapse on low-signal targets — is documented).
 
 ## Good first targets on an A100
 

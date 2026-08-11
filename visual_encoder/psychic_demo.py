@@ -100,7 +100,10 @@ class Lab:
     @torch.no_grad()
     def transmit(self, text: str) -> list[dict]:
         ids = self.brain.tokenizer(text, add_special_tokens=True).input_ids
-        chunks = [ids[i : i + 26] for i in range(0, len(ids), 26)][:6]
+        # Balanced split: no wasteful runt packets (e.g. a 2-token "2/2").
+        count = min(6, max(1, (len(ids) + 25) // 26))
+        size = (len(ids) + count - 1) // count
+        chunks = [ids[i : i + size] for i in range(0, len(ids), size)][:count]
         # Older wire turns lose their live vectors once superseded.
         for turn in self.b_history:
             if turn["role"] == "user" and MARKER in turn["content"]:
@@ -255,7 +258,7 @@ button.b{background:var(--good)}button.ghost{background:#243244;color:var(--ink)
 <div class="sub">Two real chats with two frozen models. Everything A says crosses to B as 16 vectors — no tokens between them. The middle pane is an independent wiretap translating the vectors directly; the dashed green bubbles are B's own reading of each transmission.</div>
 <div class="panes">
 
-<section class="pane a"><h2>◂ A — Qwen3-0.6B</h2>
+<section class="pane a"><h2>◂ A — Qwen3-4B (sender)</h2>
   <div id="alog" class="log"><div class="empty">Say anything. A's replies cross the wire automatically.</div></div>
   <div class="row"><input id="ain" placeholder="talk to A…" onkeydown="if(event.key==='Enter')chatA()"><button onclick="chatA()">Send</button></div>
 </section>
