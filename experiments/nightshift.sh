@@ -33,6 +33,11 @@ commit "nightshift: binding control results"
 run rollout visual_encoder.rollout_bridge --pictures 4 --steps 5000 --output runs/rollout_bridge.json
 commit "nightshift: multi-picture rollout bridge (make rollout work)"
 
+# 2b) BIGGEST LEVER — does training the receiver (a small LoRA on B) break the
+# frozen ceiling? Frozen-vs-LoRA at 20 bits/slot, the load where frozen B fails.
+run receiver_lora visual_encoder.receiver_lora --chars 64 --steps 3000 --output runs/receiver_lora.json
+commit "nightshift: receiver LoRA vs frozen (train the receiver too)"
+
 # 3) bidirectional self-port (LP-3b) — one shared 4B, both directions
 run bidirectional visual_encoder.bidirectional --steps 4000 --output runs/bidirectional.json
 commit "nightshift: LP-3b bidirectional self-port"
