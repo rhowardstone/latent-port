@@ -466,6 +466,31 @@ the blue fruit pocket" — the whisper's poetry).
 
 **Published:** <https://github.com/rhowardstone/latent-port> (private).
 
+## 2026-08-11 — Clarification: slot count is a free choice, not a limit (plan change)
+
+Realization (prompted by the user): "16 vectors per picture" was never a ceiling —
+it's a design choice. A real image → vision tower → *a few hundred* patch-tokens
+(one per ~28px patch), which is why a rendered-text image holds ~2000 chars. Our
+latent port DELETED the vision tower and injects our own vectors; we picked 16 slots
+as a small unit to measure per-vector capacity cleanly. Two INDEPENDENT axes, which
+the "picture" metaphor had been blurring:
+
+- **slots per picture = free.** 16 was a thumbnail. Use 64/256 for longer messages;
+  each slot costs one KV position, exactly like an image's patch-tokens.
+- **per-vector density (~2 tokens/vector) = the real frozen-receiver ceiling.** This
+  is what the density experiments actually measure, independent of slot count.
+
+**Plan change.** For long messages there are two routes: (a) multi-picture **rollout**
+— a *sequence* of 16-vector pictures (what `rollout_bridge.py` trains now); B tends
+to fixate on picture 1 because reading a sequence is OOD/hard. (b) one **wide
+picture** — more slots (e.g. 64) injected as ONE contiguous block, same 2 tok/slot
+density; no sequence, so no fixation. The wide picture is likely the *cleaner* path
+and directly matches how a real image works (one big block). The running rollout run
+is the test of route (a); if it plateaus, build route (b) — a 64-slot / 128-token
+`text_bridge` (needs WINDOW parameterized, deferred so it doesn't destabilize the
+running jobs). Also: re-baseline efficiency vs rendered-text at a COMPARABLE budget
+(a few hundred tokens), not against our 16-vector thumbnail (A13).
+
 ## 2026-08-11 — Binding control VERDICT (external-review A4)
 
 Ran the order-preserving warm-start sweep at 20 bits/slot (`runs/binding/*.json`),
