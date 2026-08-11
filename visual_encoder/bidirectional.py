@@ -254,8 +254,11 @@ def main() -> None:
     ckpt = args.output.parent / "bridges" / f"lp3b_selfport_{args.model.split('/')[-1]}_{args.slots}slots.pt"
     ckpt.parent.mkdir(parents=True, exist_ok=True)
     torch.save(bridge.state_dict(), ckpt)
+    from .provenance import provenance
+
     result = {
         "experiment": "LP-3b bidirectional self-port",
+        "provenance": provenance(args),
         "model": args.model,
         "note": "one bridge, both directions (peers share weights)",
         "trained_template_eval": final,

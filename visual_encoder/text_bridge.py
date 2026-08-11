@@ -321,8 +321,12 @@ def main() -> None:
     checkpoint = args.output.parent / "bridges" / f"lp2_text_{args.slots}slots{args.tag}.pt"
     checkpoint.parent.mkdir(parents=True, exist_ok=True)
     torch.save(bridge.state_dict(), checkpoint)
+    from .provenance import provenance
+
     result = {
         "experiment": "LP-2 text bridge",
+        "provenance": provenance(args),
+        "sender_model": args.sender,
         "legibility_weight": args.legibility_weight,
         **tap_scores,
         "window_a_tokens": WINDOW,

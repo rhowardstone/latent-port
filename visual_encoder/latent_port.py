@@ -22,6 +22,7 @@ import torch
 from torch import nn
 from transformers import AutoModelForImageTextToText, AutoTokenizer
 
+from .provenance import provenance
 from .text_baseline import BASE32_PATTERN, levenshtein
 
 BASE32_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
@@ -570,7 +571,15 @@ def main() -> None:
         print(json.dumps({k: v for k, v in result.items() if k != "loss_curve"}, sort_keys=True), flush=True)
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(
-            json.dumps({"model": args.model, "experiment": "LP-1", "results": results}, indent=2)
+            json.dumps(
+                {
+                    "experiment": "LP-1",
+                    "model": args.model,
+                    "provenance": provenance(args),
+                    "results": results,
+                },
+                indent=2,
+            )
             + "\n"
         )
 

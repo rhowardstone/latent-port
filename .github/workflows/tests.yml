@@ -1,0 +1,26 @@
+name: tests
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install CPU deps (imports only — unit tests never download models)
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy pillow pytest
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install transformers datasets
+      - name: Run unit tests (CPU-safe; helper-level, no model/dataset downloads)
+        env:
+          HF_HUB_OFFLINE: "1"
+          TRANSFORMERS_OFFLINE: "1"
+        run: python -m pytest -q

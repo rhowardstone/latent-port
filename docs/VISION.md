@@ -50,10 +50,40 @@ a covert channel could use.
 **User's insight.** You don't strictly need two models. Give a model a trained
 "vector mouth" (LoRA/head that emits a latent instead of a token) and feed that
 latent straight back into its own input port. Now it *reasons in vectors* — a
-self-loop, no text in the middle. Emit k vectors, each worth ~2 tokens, and a
-2000-token thought becomes ~125 latent steps: fewer expensive sequential
-decodes. The independent wiretap becomes a **thought-translator** — you can read
-the latent reasoning in English without asking the model to narrate it.
+self-loop, no text in the middle. The independent wiretap can read that latent
+stream in English without asking the model to narrate.
+
+**CORRECTION (external review): the "2000 tokens → ~125 latent steps" arithmetic
+is NOT earned yet, and the distinction is where this graduates from codec to
+architecture.** What LP-2/3 proved is *representation compression* of an
+**already-computed** sequence: 32 A-tokens whose hidden states A had to generate
+one-by-one → 16 B positions. It does NOT prove
+`32 sequential reasoning steps → 16 sequential latent steps`. Coconut-style
+"feed the last hidden state back" removes vocabulary decoding but does not let one
+recurrent step leap over multiple token-generation steps. The thing you actually
+want is a **macro-step latent** `h_t --F_θ--> z_{t+Δ}` where one forward pass
+advances the computation by Δ>1 token-level reasoning steps (or a block
+`h_t → (z_{t+1..t+k})` predicted in parallel). Only then is
+`sequential_depth_latent ≪ sequential_depth_text`.
+
+**Temporal abstraction — the LP-4 central experiment (before free-running
+continuous thought).** Define step-capacity
+`C_step = (useful computation advanced) / (receiver forward passes)`, and
+estimate the effective **thought stride** Δ: distill *future model state* — take
+teacher hidden state `h_t`, train the out-port so that injecting its latent makes
+the frozen model behave as if it had reached `h_{t+Δ}`:
+`L = D(h^latent_{t+1}, stopgrad(h^teacher_{t+Δ})) + λ·L_task`, then recurse.
+Sweep `Δ ∈ {1,2,4,8,16,32}` → a stride capacity curve. If Δ=16 holds, the
+"2000→125" claim finally has an experimental basis; if only Δ=1 works, the
+self-loop is a codec, not a reasoning accelerator. This is the honest fork.
+
+**"Thought translator" → "latent-protocol translator" until proven.** The tap
+reads the *communication state*, not necessarily a faithful account of every
+internal computation. Testable by **causal intervention**: if the tap says a
+latent direction means "carry the 7," erase/rotate that direction and check
+whether downstream behavior changes as the decoded English predicts. If tap
+semantics predict intervention consequences, "thought translator" becomes a
+strong claim; until then it's protocol translation.
 
 **Status / honesty.** This is real and has precedent (Coconut / "chain of
 continuous thought" feeds the last hidden state back as the next input; recurrent
@@ -128,6 +158,39 @@ capability angle, per Coconut). Not superintelligence.
 Falsifiable test (LP-6): the latent colony must **beat text-relay at equal token
 budget** to justify vectors at all. Current honest prediction: it ties text on
 capability and wins on efficiency/auditability. State it that way.
+
+## Idea: a canonical latent bus / neural ABI (avoid O(n²) bridges)
+
+**User + review.** With `n` heterogeneous specialists you do NOT want O(n²)
+pairwise bridges. Define one **canonical bus** `Z` and give each model `M_i` just
+two adapters: encoder `E_i: H_i → Z` and decoder `D_i: Z → H_i`. Then `i→j`
+communication is `h_i --E_i--> z --D_j--> h_j`, and adding the 21st expert costs
+**two adapters, not twenty translators** — O(n), not O(n²). The router operates
+directly on `Z`: `r(z) → {math, code, vision, …}`.
+
+This meshes with what the repo already has: CCA/Procrustes gives initial
+`E_i,D_i` (A8); the tap decodes the single bus `Z` (not every pairwise protocol);
+the manifold detector monitors one standardized space; LP-5 measures the
+auditability tax on that bus; **gauge symmetry** is the theoretical obstacle to a
+canonical coordinate system, and **semantic anchors** break that gauge freedom.
+
+**Structured bus.** Impose subspaces `Z = Z_semantic ⊕ Z_control ⊕ Z_exact ⊕
+Z_scratch`: `Z_exact` error-corrected and deliberately low-capacity (keys,
+numbers); `Z_scratch` lossy/high-density (the whisper regime); `Z_control` carries
+routing/type/boundary (frame headers). That is an **ABI for neural models**, not
+"models sending weird vectors" — and it's the natural home for the frames +
+content-types + service-classes standardization sketch.
+
+## Two research programs crystallized (external review)
+
+1. **Latent temporal abstraction** — learn macro-thought steps that skip multiple
+   autoregressive computation steps (the corrected self-loop above). Reframes
+   LP-4: distill future state at stride Δ *before* free-running continuous thought.
+2. **A canonical neural ABI/bus** — O(n) adapters connecting heterogeneous
+   specialists into one auditable latent space, with structured subspaces and a
+   router on `Z`.
+
+Both may matter more than squeezing another couple bits/slot out of LP-1.
 
 ## Standing cautions carried from review
 

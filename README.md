@@ -1,5 +1,7 @@
 # latent-port
 
+![tests](https://github.com/rhowardstone/latent-port/actions/workflows/tests.yml/badge.svg)
+
 **Can one frozen language model speak directly into another's mind — in vectors,
 not tokens — and can a third party read the wire?**
 
@@ -53,7 +55,7 @@ visual_encoder/
   text_tap.py      token-level wiretap for free-text traffic
   psychic_demo.py  the three-pane live demo (chat A | tapped wire | chat B)
   web.py           the original visual-channel interactive lab
-tests/             31 passing unit tests (CPU-safe)
+tests/             CPU-safe unit tests (helper-level; see CI badge)
 runs/              JSON results, lens PNGs (checkpoints/logs gitignored)
 NOTEBOOK.md        chronological findings — the primary document
 OPEN-PROBLEMS.md   mathematically-framed open questions for collaborators
@@ -63,7 +65,7 @@ OPEN-PROBLEMS.md   mathematically-framed open questions for collaborators
 
 ```bash
 pip install -e .[dev]           # torch, transformers, fastapi, datasets needed
-python -m pytest -q             # 31 tests
+python -m pytest -q             # CPU-safe unit tests
 python -m visual_encoder.latent_port          # LP-1 capacity sweep
 python -m visual_encoder.port_lens            # lens figures from checkpoints
 python -m visual_encoder.wiretap              # taps + gauges
@@ -77,14 +79,16 @@ Models download from Hugging Face on first use. Seeds are fixed throughout;
 payloads are held out by construction (train and eval draw from disjoint
 seeded streams).
 
-**Test coverage is honest about its scope:** the 35 pytest cases cover pure
+**Test coverage is honest about its scope:** the CPU test suite covers pure
 helpers (bit packing, probe algebra, codecs, the manifold gauge, the
 binding-control metrics) — *not* the headline experiments, which need a GPU and
 downloaded models. Treat "tests pass" as helper-level regression, not validation
 of the capacity claims; those live in `runs/` artifacts and are reproduced by the
-`python -m` commands above. A GPU smoke-suite and CI are open tasks (see
-`reviews/`). Note: LP-2 fidelity is the artifact-backed wikitext number
-(71.6/72.4%); an earlier chat-register figure was withdrawn for a provenance gap.
+`python -m` commands above (CI runs the CPU suite on every push — see the badge).
+A GPU smoke-suite is still an open task. Note: LP-2 fidelity is the
+artifact-backed wikitext number (71.6/72.4%); an earlier chat-register figure was
+withdrawn for a provenance gap. Every experiment JSON now embeds a `provenance`
+block (git SHA, full CLI args, package versions) via `visual_encoder/provenance.py`.
 
 ## Reviews & collaboration
 
