@@ -32,9 +32,16 @@ commit "nightshift: binding results"
 # 1) rollout fix (resumes/finishes if it was mid-run, or skips if done)
 run rollout runs/rollout_bridge.json visual_encoder.rollout_bridge --pictures 4 --steps 5000
 
-# NOTE: scaling doubling sweep (wide_picture) DEFERRED — its fresh-training
-# underperforms (22% vs the eval-path-verified 77%); needs a training fix before
-# it's worth GPU. Running the proven experiments first.
+# SCALING DOUBLING SWEEP (fixed: coherent passages — verified fidelity climbs).
+# image size (slots) x vector content (tokens/slot), density=2 unless noted.
+run scale_s16  runs/scaling/s16_w32.json   visual_encoder.wide_picture --slots 16  --window 32  --steps 3000
+run scale_s32  runs/scaling/s32_w64.json   visual_encoder.wide_picture --slots 32  --window 64  --steps 3000
+run scale_s64  runs/scaling/s64_w128.json  visual_encoder.wide_picture --slots 64  --window 128 --steps 3000
+run scale_s128 runs/scaling/s128_w256.json visual_encoder.wide_picture --slots 128 --window 256 --steps 3000
+run scale_d1   runs/scaling/s32_w32.json   visual_encoder.wide_picture --slots 32 --window 32  --steps 3000
+run scale_d3   runs/scaling/s32_w96.json   visual_encoder.wide_picture --slots 32 --window 96  --steps 3000
+run scale_d4   runs/scaling/s32_w128.json  visual_encoder.wide_picture --slots 32 --window 128 --steps 3000
+commit "nightshift: scaling doubling sweep (coherent-passages fix)"
 
 # 3) biggest lever — receiver LoRA vs frozen at 20 bits/slot
 run receiver_lora runs/receiver_lora.json visual_encoder.receiver_lora --chars 64 --steps 3000
