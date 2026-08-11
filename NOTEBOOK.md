@@ -432,6 +432,41 @@ B answers "Orange". Fixed 16-vector cost per message means density wins only
 for messages >16 tokens (1.4–2.5× at 23–40 tokens); short messages cost more
 than text — an honest limitation of the fixed-slot design.
 
+## 2026-08-10 — LP-2 v3: 4B sender, complete-register corpus, live demo verified
+
+**Changes.** Sender upgraded 0.6B → Qwen3-4B (0.6B refused relay tasks —
+sender-model competence, never the port). Corpus completed: wikitext + synthetic
+chat + secret strings (25%) + assistant-register lines + **485 harvested genuine
+A replies (×2)** — training the port on its actual sender's voice. Demo: multi-
+packet rollout (long replies stream as numbered 16-vector frames, all packets
+live in B's context), one-clause port-mechanics addition to A's system line.
+
+**Battery** (`runs/text_bridge.json` v3): chat register 77.7% chars (v2: 73.1%),
+wikitext 71.6% with first exact packets, novel template 72.4% ≈ trained.
+Password transmission `A20h9jt6eGa` → ~8/11 chars (was mush pre-secrets-corpus).
+Comprehension noisy across retrains (2/6 expanded set; single-sample variance
+dominates). Text tap still LM-prior-limited (~53%); smoother queued.
+
+**Live demo verification** (port 8766, all real API transcripts): orange →
+verbatim crossing → B answers "orange". Password → B answers `a20h9t2e` (7/11;
+two identified fixes: packetizer split the string mid-password at the token-26
+boundary; boilerplate packet echoed prior context). Multi-packet: 2-frame
+message, both LEGIT, B *summarizes* correctly ("meeting Tuesday 3pm, key under
+the blue fruit pocket" — the whisper's poetry).
+
+**Published:** <https://github.com/rhowardstone/latent-port> (private).
+
+## 2026-08-10 — LP-5a launched: the legibility tax
+
+Question: what does auditable traffic cost? `--legibility-weight λ` co-trains a
+reference tap with the bridge; total loss = B's CE + λ·tap CE. Sweep λ ∈
+{0.3, 1, 3} vs the λ=0 baseline (v3): measure B fidelity (capacity) vs
+co-trained tap fidelity (auditability) per λ. Running; results below.
+Queued next: LP-5b (evolve unsupervised native code; test post-hoc translation
+from behavioral grounding only), LP-4 (latent rollout: A emits vectors without
+generating text — the output-token elimination), v4 demo fixes (variable packet
+sizes, quote-aware packetizer, tap LM-smoother).
+
 ## 2026-08-10 — The three-pane demo is live (v1, Base32 protocol — superseded by v2 above)
 
 `visual_encoder/psychic_demo.py` (port 8766): chat with A (0.6B) | THE WIRE |

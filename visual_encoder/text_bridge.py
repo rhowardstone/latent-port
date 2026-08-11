@@ -181,6 +181,9 @@ def main() -> None:
     parser.add_argument("--sender", default="Qwen/Qwen3-0.6B")
     parser.add_argument("--slots", type=int, default=16)
     parser.add_argument("--steps", type=int, default=6000)
+    parser.add_argument("--legibility-weight", type=float, default=0.0,
+                        help="LP-5a: co-train a reference tap; add this weight of tap CE to the bridge loss")
+    parser.add_argument("--tag", default="", help="suffix for output/checkpoint names")
     parser.add_argument("--warmstart-steps", type=int, default=800)
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--lr", type=float, default=1e-3)
@@ -238,7 +241,16 @@ def main() -> None:
         if step % 200 == 0 or step == args.warmstart_steps - 1:
             print(f"warmstart {step}/{args.warmstart_steps} mse={loss.item():.5f}", flush=True)
 
-    optimizer = torch.optim.AdamW(bridge.parameters(), lr=args.lr, weight_decay=0.01)
+    reference_tap = None
+    if args.legibility_weight > 0:
+        from .text_tap import TextWiretap
+
+        reference_tap = TextWiretap(d_model, WINDOW // args.slots, brain.width).to(args.device)
+        a_embed_table = brain.model.get_input_embeddings().weight.detach().float()
+    trainable = list(bridge.parameters()) + (
+        list(reference_tap.parameters()) if reference_tap else []
+    )
+    optimizer = torch.optim.AdamW(trainable, lr=args.lr, weight_decay=0.01)
     schedule = torch.optim.lr_scheduler.LambdaLR(
         optimizer,
         lambda step: min(1.0, (step + 1) / args.warmup)
@@ -263,6 +275,15 @@ def main() -> None:
                 labels=labels,
                 position_ids=text_positions(embeds.shape[0], embeds.shape[1], embeds.device),
             ).loss
+            if reference_tap is not None:
+                window_ids = brain.tokenizer(
+                    texts, return_tensors="pt", padding="max_length", truncation=True,
+                    max_length=WINDOW, add_special_tokens=True,
+                ).input_ids.to(args.device)
+                tap_logits = reference_tap(latents.float(), a_embed_table)
+                loss = loss + args.legibility_weight * nn.functional.cross_entropy(
+                    tap_logits.reshape(-1, tap_logits.shape[-1]), window_ids.reshape(-1)
+                )
         optimizer.zero_grad(set_to_none=True)
         loss.backward()
         torch.nn.utils.clip_grad_norm_(bridge.parameters(), 1.0)
@@ -281,11 +302,28 @@ def main() -> None:
 
     final_trained = evaluate(model, batchers[0], brain, bridge, val_snippets, args, args.eval_samples)
     final_novel = evaluate(model, novel_batcher, brain, bridge, val_snippets, args, args.eval_samples)
-    checkpoint = args.output.parent / "bridges" / f"lp2_text_{args.slots}slots.pt"
+    tap_scores = {}
+    if reference_tap is not None:
+        from .text_tap import read_text_wire
+
+        hits, total = 0.0, 0
+        rng = np.random.default_rng(args.seed + 999)
+        for index in rng.choice(len(val_snippets), 32, replace=False):
+            text = val_snippets[index]
+            states, mask = masked_read(brain, [text])
+            with torch.no_grad():
+                latents = bridge(states, mask).float()
+            decoded, _ = read_text_wire(reference_tap, latents, a_embed_table, brain.tokenizer)
+            hits += 1 - levenshtein(text, decoded[0]) / max(len(text), len(decoded[0]), 1)
+            total += 1
+        tap_scores = {"cotrained_tap_char_accuracy": hits / total}
+    checkpoint = args.output.parent / "bridges" / f"lp2_text_{args.slots}slots{args.tag}.pt"
     checkpoint.parent.mkdir(parents=True, exist_ok=True)
     torch.save(bridge.state_dict(), checkpoint)
     result = {
         "experiment": "LP-2 text bridge",
+        "legibility_weight": args.legibility_weight,
+        **tap_scores,
         "window_a_tokens": WINDOW,
         "steps": args.steps,
         "bridge_parameters": sum(p.numel() for p in bridge.parameters()),
