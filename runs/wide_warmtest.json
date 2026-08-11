@@ -1,33 +1,40 @@
 {
   "experiment": "wide picture (single contiguous block)",
   "provenance": {
-    "git_sha": "1012b085e814701f0fa0237696e7f121375b9657",
-    "timestamp_utc": "2026-08-11T13:36:51.262699+00:00",
+    "git_sha": "49de126780fd8a4ffa972d1e0c5056fd20eda3d5-dirty",
+    "timestamp_utc": "2026-08-11T13:53:34.345123+00:00",
     "argv": [
       "/atb-data/rye/Visual-encoder/visual_encoder/wide_picture.py",
       "--slots",
       "16",
       "--window",
       "32",
+      "--warmstart-steps",
+      "400",
       "--steps",
-      "2000",
+      "500",
+      "--eval-every",
+      "400",
+      "--eval-samples",
+      "16",
       "--output",
-      "runs/scaling/s16_w32.json"
+      "runs/wide_warmtest.json"
     ],
     "cli_args": {
       "receiver": "Qwen/Qwen3-VL-2B-Instruct",
       "sender": "Qwen/Qwen3-4B",
       "slots": 16,
       "window": 32,
-      "steps": 2000,
+      "steps": 500,
+      "warmstart_steps": 400,
       "batch_size": 6,
       "lr": 0.001,
       "warmup": 50,
-      "eval_every": 500,
-      "eval_samples": 48,
+      "eval_every": 400,
+      "eval_samples": 16,
       "seed": 20260819,
       "device": "cuda",
-      "output": "runs/scaling/s16_w32.json"
+      "output": "runs/wide_warmtest.json"
     },
     "versions": {
       "python": "3.12.2",
@@ -42,32 +49,22 @@
   "tokens_per_slot": 2.0,
   "interim_evals": [
     {
-      "step": 500,
+      "step": 400,
       "exact": 0.0,
-      "fid": 0.2304548545141228
-    },
-    {
-      "step": 1000,
-      "exact": 0.0,
-      "fid": 0.22570781106300286
-    },
-    {
-      "step": 1500,
-      "exact": 0.0,
-      "fid": 0.22841030209308932
+      "fid": 0.22840909649467192
     }
   ],
   "final": {
-    "samples": 48,
+    "samples": 16,
     "exact_rate": 0.0,
     "char_fidelity": {
-      "mean": 0.21644733469497787,
-      "lo": 0.2063588352924881,
-      "hi": 0.22660561664296544,
-      "n": 48,
+      "mean": 0.22630966187938362,
+      "lo": 0.19720292143601648,
+      "hi": 0.24972603528495702,
+      "n": 16,
       "n_boot": 2000,
       "bootstrap_seed": 20260819
     }
   },
-  "train_seconds": 2572.6965613018256
+  "train_seconds": 660.0440221661702
 }

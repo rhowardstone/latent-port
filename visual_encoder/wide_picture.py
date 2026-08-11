@@ -46,6 +46,19 @@ def read_wide(brain, bridge, texts, window):
     return bridge((states * mask.unsqueeze(-1)).float(), mask)
 
 
+def warm_targets_wide(model, tokenizer, texts, slots, window, device):
+    """Per-slot mean of the window's RECEIVER token embeddings (on-manifold init).
+
+    Cold start crawls through a frozen receiver (LP-1 lesson); this is the warm
+    start wide_picture was missing. Mirrors text_bridge.warm_targets but
+    window-parameterized."""
+    batch = tokenizer(texts, return_tensors="pt", padding="max_length", truncation=True,
+                      max_length=window, add_special_tokens=False).to(device)
+    with torch.no_grad():
+        emb = model.get_input_embeddings()(batch["input_ids"]).float()
+    return emb.reshape(len(texts), slots, window // slots, -1).mean(dim=2)
+
+
 def evaluate(model, tokenizer, brain, bridge, batcher, snippets, args, samples):
     bridge.eval()
     fids, exact = [], 0
@@ -68,6 +81,7 @@ def main() -> None:
     p.add_argument("--slots", type=int, default=64)
     p.add_argument("--window", type=int, default=128)   # 2 tokens/slot at 64 slots
     p.add_argument("--steps", type=int, default=2500)
+    p.add_argument("--warmstart-steps", type=int, default=600)
     p.add_argument("--batch-size", type=int, default=6)
     p.add_argument("--lr", type=float, default=1e-3)
     p.add_argument("--warmup", type=int, default=50)
@@ -92,10 +106,31 @@ def main() -> None:
     bridge.calibrate(*(lambda s, m: (s * m.unsqueeze(-1), m))(*brain.read(
         wide_messages(brain, train, args.window, np.random.default_rng(args.seed), 64), pad_to=args.window)))
 
+    ck = args.output.parent / "ckpt" / f"wide_{args.slots}s_{args.window}w.pt"
+    warm_ck = args.output.parent / "ckpt" / f"wide_{args.slots}s_{args.window}w.warm.pt"
+    warm_ck.parent.mkdir(parents=True, exist_ok=True)
+    # WARM START (essential — cold start crawls through a frozen receiver). Save the
+    # warm-started weights so a restart after warm-but-before-CE reloads them.
+    if not ck.exists():
+        if warm_ck.exists():
+            bridge.load_state_dict(torch.load(warm_ck, map_location=args.device))
+            print("loaded warm-start weights", flush=True)
+        else:
+            warm_opt = torch.optim.AdamW(bridge.parameters(), lr=args.lr)
+            for step in range(args.warmstart_steps):
+                rng = np.random.default_rng(args.seed * 999_983 + step)
+                msgs = wide_messages(brain, train, args.window, rng, args.batch_size)
+                vecs = read_wide(brain, bridge, msgs, args.window)
+                loss = nn.functional.mse_loss(
+                    vecs.float(), warm_targets_wide(model, tokenizer, msgs, args.slots, args.window, args.device))
+                warm_opt.zero_grad(set_to_none=True); loss.backward(); warm_opt.step()
+                if step % 200 == 0 or step == args.warmstart_steps - 1:
+                    print(f"warmstart {step}/{args.warmstart_steps} mse={loss.item():.5f}", flush=True)
+            torch.save(bridge.state_dict(), warm_ck)
+
     opt = torch.optim.AdamW(bridge.parameters(), lr=args.lr, weight_decay=0.01)
     sched = torch.optim.lr_scheduler.LambdaLR(
         opt, lambda s: min(1.0, (s + 1) / args.warmup) * 0.5 * (1 + math.cos(math.pi * min(1.0, s / args.steps))))
-    ck = args.output.parent / "ckpt" / f"wide_{args.slots}s_{args.window}w.pt"
     start = 0
     if ck.exists():
         try:
@@ -139,6 +174,7 @@ def main() -> None:
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, indent=2) + "\n")
     if ck.exists(): ck.unlink()
+    if warm_ck.exists(): warm_ck.unlink()
     print(json.dumps({k: v for k, v in result.items() if k != "provenance"}, sort_keys=True), flush=True)
 
 
