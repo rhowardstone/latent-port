@@ -20,7 +20,10 @@ notebook. **For reviewers:** [`OPEN-PROBLEMS.md`](OPEN-PROBLEMS.md) — the open
 questions stated mathematically, with measured constants and proposed
 experiments. **For the "why":** [`docs/VISION.md`](docs/VISION.md) — the
 conceptual arc, the self-port rollout and MoE-colony directions, and the safety
-frame. Review records live in [`reviews/`](reviews/).
+frame. **To use the trained models:** [`ARTIFACTS.md`](ARTIFACTS.md) — download
+the trained bridges/taps (GitHub Release) with a load-and-use snippet. Review
+records live in [`reviews/`](reviews/); multi-agent coordination in
+[`docs/COORDINATION.md`](docs/COORDINATION.md).
 
 ## Headline results (as of 2026-08-10)
 
@@ -33,6 +36,8 @@ frame. Review records live in [`reviews/`](reviews/).
 | Independent wiretap on all bit-packed protocols | ~100% decode; drift z-gauge separates protocols at z ≥ 1.6 vs 1.0 | `runs/wiretap*.json` |
 | Content stays *per-slot* at every working density; what fails is within-slot **order** | transposition-dominated errors at 20 bits/slot | `runs/lens/` figures |
 | Live two-model demo with tapped wire | orange/password/multi-packet transcripts | `visual_encoder/psychic_demo.py` |
+| **Training the receiver (small LoRA on B) breaks the frozen ceiling** | 20 bits/slot exact **~0% → 82.8%**; order error 8.1% → 0.1% | `runs/receiver_lora.json` |
+| Picture size scales (patch → whole picture, 2 tok/vector) | fidelity holds/improves: 16 slots 0.79 → 32 slots 0.87 | `runs/scaling/` |
 
 Earlier arc: the same lab measured the *visual* channel (images into the vision
 tower) — depth-resolved probes localized where information dies in the encoder

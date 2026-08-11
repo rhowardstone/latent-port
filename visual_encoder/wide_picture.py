@@ -195,6 +195,8 @@ def main() -> None:
               "interim_evals": interim, "final": final, "train_seconds": time.monotonic() - started}
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, indent=2) + "\n")
+    bdir = args.output.parent / "bridges"; bdir.mkdir(parents=True, exist_ok=True)
+    torch.save(bridge.state_dict(), bdir / f"lp2_wide_{args.slots}s_{args.window}w.pt")  # persist for downstream
     if ck.exists(): ck.unlink()
     if warm_ck.exists(): warm_ck.unlink()
     print(json.dumps({k: v for k, v in result.items() if k != "provenance"}, sort_keys=True), flush=True)

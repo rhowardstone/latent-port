@@ -179,6 +179,14 @@ def main() -> None:
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, indent=2) + "\n")
+    # persist the trained sender + LoRA adapter for downstream use
+    ad = args.output.parent / "bridges"; ad.mkdir(parents=True, exist_ok=True)
+    try:
+        from peft import get_peft_model_state_dict
+        torch.save({"sender": sender.state_dict(), "lora": get_peft_model_state_dict(model)},
+                   ad / f"receiver_lora_{args.chars}c_r{args.lora_r}.pt")
+    except Exception as exc:
+        print(f"artifact save failed ({exc})", flush=True)
     print(json.dumps({k: v for k, v in result.items() if k != "provenance"}, sort_keys=True), flush=True)
 
 

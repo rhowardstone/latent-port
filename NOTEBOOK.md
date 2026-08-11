@@ -466,6 +466,42 @@ the blue fruit pocket" — the whisper's poetry).
 
 **Published:** <https://github.com/rhowardstone/latent-port> (private).
 
+## 2026-08-11 — Overnight results: receiver-LoRA (biggest lever), bidirectional, scaling
+
+**Receiver LoRA vs frozen (the headline).** `runs/receiver_lora.json`, 20 bits/slot
+(the load where frozen B fails). A 17.4M-param LoRA on B's decoder, co-trained with
+the sender: **exact 0% (frozen, reliable binding baseline) → 82.8%; order error
+8.1% → 0.1%.** Training the receiver breaks the frozen ceiling and erases the
+residual binding limit — confirming the wiretap-gap prediction (the info was always
+in the vectors; frozen B just couldn't use it). (This run's *in-run* frozen baseline
+read anomalously low — 7.6% char, a restart artifact — so compare against binding's
+reliable frozen ~0% exact / 84% char.) Biggest lever, decisively.
+
+**Bidirectional self-port (LP-3b).** `runs/bidirectional.json`: one shared-weight
+Qwen3-4B, both directions via one bridge. 57% char, 0% exact, generalizes
+(trained ≈ novel template ≈ 0.57). A real two-way vector link, but notably lossier
+than the one-way 4B→2B port (75%) — worth a follow-up.
+
+**Scaling doubling sweep (image size × vector content).** After fixing the training
+bug (coherent contiguous passages, not random concatenation — the flat-22% culprit;
+see the plan-change note below), fidelity climbs properly. Image-size axis (2
+tok/slot, density fixed), doubling the picture:
+
+| picture | slots | message | char fidelity |
+| ---: | ---: | ---: | ---: |
+| patch | 16 | 32 tok | 0.791 |
+| 2× | 32 | 64 tok | 0.867 |
+
+Doubling the picture (proportionally longer message, same density) does NOT degrade
+fidelity — it improves. s64/s128 + the density axis still running; full curve TBD.
+Early answer to "does the whole picture scale?": yes, so far.
+
+**Reproducibility packaging (2026-08-11).** Trained artifacts shipped as a GitHub
+Release (`trained-artifacts-2026-08-11`, 19 files / 463MB) — see `ARTIFACTS.md` for
+what each is, a load-and-use snippet, and regenerate commands. `peft` added to deps;
+`wide_picture`/`receiver_lora` now persist their trained bridge/adapter. Every result
+JSON embeds `provenance` (git SHA + CLI args + versions); CI is green.
+
 ## 2026-08-11 — Clarification: slot count is a free choice, not a limit (plan change)
 
 Realization (prompted by the user): "16 vectors per picture" was never a ceiling —
