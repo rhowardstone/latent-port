@@ -1,0 +1,47 @@
+{
+  "experiment": "LP-4 latent macro-steps",
+  "model": "Qwen/Qwen3-0.6B",
+  "results": [
+    {
+      "delta": 1,
+      "macro_jump_acc": 0.471631204833587,
+      "noop_jump_acc": 0.14574468055119116,
+      "noop_next_acc": 0.9858156045277914,
+      "state_cosine_h_t_vs_future": 0.754110911488533,
+      "pred_cosine_vs_future": 0.8714119046926498,
+      "recursive_macro_acc": 0.05,
+      "train_seconds": 11.057649850845337
+    },
+    {
+      "delta": 2,
+      "macro_jump_acc": 0.33514492626612385,
+      "noop_jump_acc": 0.14275362311551967,
+      "noop_next_acc": 0.9858695685863494,
+      "state_cosine_h_t_vs_future": 0.7001759683092436,
+      "pred_cosine_vs_future": 0.8132319778203965,
+      "recursive_macro_acc": 0.07971014492753624,
+      "train_seconds": 8.55190896987915
+    },
+    {
+      "delta": 4,
+      "macro_jump_acc": 0.27083333482344946,
+      "noop_jump_acc": 0.16060606141885123,
+      "noop_next_acc": 0.9856060653924942,
+      "state_cosine_h_t_vs_future": 0.6784183089931806,
+      "pred_cosine_vs_future": 0.7615108415484428,
+      "recursive_macro_acc": 0.0803030303030303,
+      "train_seconds": 8.620328187942505
+    },
+    {
+      "delta": 8,
+      "macro_jump_acc": 0.27041666687776644,
+      "noop_jump_acc": 0.17416666746139525,
+      "noop_next_acc": 0.9845833390951156,
+      "state_cosine_h_t_vs_future": 0.6733118419845899,
+      "pred_cosine_vs_future": 0.7290868858496348,
+      "recursive_macro_acc": 0.13,
+      "train_seconds": 8.109669208526611
+    }
+  ],
+  "reading": "macro_jump_acc >> noop_jump_acc and holding for \u0394>1 => one step skips real computation (temporal abstraction). If macro only beats noop at \u0394=1 => codec, not accelerator. noop_next_acc should be ~1.0 (greedy sanity)."
+}

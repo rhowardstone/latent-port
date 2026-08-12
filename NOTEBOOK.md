@@ -632,3 +632,34 @@ text). First end-to-end run: secret → A → wire (tap exact, LEGIT, z 0.98) �
 B receives exact → B answers follow-up questions about the code from its own
 decode. Honest scope: the trained protocol carries 32-char Base32 payloads;
 semantic traffic is LP-2/LP-3b.
+
+## 2026-08-12 — LP-4: latent macro-steps (can one learned step skip Δ>1 tokens?)
+
+**Question.** A frozen LM's last-layer state h_t predicts the next token. Train a
+small residual net g: h_t → h_{t+Δ} and decode g(h_t) through the model's OWN frozen
+head. Does one learned step jump the model Δ token-generation steps ahead (temporal
+abstraction) — or only work at Δ=1 (a codec)? Honest bar: the no-op baseline
+decode(h_t)→token_{t+Δ}, i.e. how far the raw state already sees. Sanity:
+decode(h_t)→token_{t+1} must be ~1.0 (`runs/latent_rollout.json`, Qwen3-0.6B).
+
+| Δ | macro jump | noop baseline | ratio | recursive (chained) | state cos |
+|--:|--:|--:|--:|--:|--:|
+| 1 | 0.472 | 0.146 | 3.24× | 0.050 | 0.75 |
+| 2 | 0.335 | 0.143 | 2.35× | 0.080 | 0.70 |
+| 4 | 0.271 | 0.161 | 1.69× | 0.080 | 0.68 |
+| 8 | 0.270 | 0.174 | 1.55× | 0.130 | 0.67 |
+
+Sanity noop_next = 0.986 at every Δ (readout valid). pred_cos (0.87→0.73) > state_cos
+(0.75→0.67): g genuinely moves the state toward the future, not just copying h_t.
+
+**Verdict — partial yes, but it does NOT chain.** The single learned jump carries
+real look-ahead: it beats the no-op baseline at every Δ (1.55–3.24×), so a lone
+vector step does predict a token multiple generation-steps ahead better than the raw
+state does. BUT (a) absolute accuracy is modest and decays with Δ (47%→27%), so the
+jump is lossy, and (b) crucially, chaining collapses — recursive roll-out (h_0→h_Δ→
+h_2Δ…) lands at 5–13%. You cannot stack macro-steps to roll a whole message ahead in
+latent space; the horizon dies after ~2 jumps. This is exactly the analog-drift the
+Coconut/CALM literature warned of: text tokens act as error-correcting repeaters that
+a pure-latent chain lacks. So the honest answer to "just emit vectors and skip
+generation" is: one hop is real but weak, and it doesn't compound into a rollout.
+A weak accelerator / lossy codec, not strong temporal abstraction.
