@@ -37,7 +37,7 @@ records live in [`reviews/`](reviews/); multi-agent coordination in
 | Content stays *per-slot* at every working density; what fails is within-slot **order** | transposition-dominated errors at 20 bits/slot | `runs/lens/` figures |
 | Live two-model demo with tapped wire | orange/password/multi-packet transcripts | `visual_encoder/psychic_demo.py` |
 | **Training the receiver (small LoRA on B) breaks the frozen ceiling** | 20 bits/slot exact **~0% → 82.8%**; order error 8.1% → 0.1% | `runs/receiver_lora.json` |
-| Picture size scales (patch → whole picture, 2 tok/vector) | fidelity holds/improves: 16 slots 0.79 → 32 slots 0.87 | `runs/scaling/` |
+| Picture size scales (patch → whole picture, 2 tok/vector) | fidelity holds/improves **16→128 vectors: 0.79 → 0.91**; 256 stuck at warm-start floor (recipe limit) and 512 OOM'd — engineering walls, not a proven model ceiling | `runs/scaling/` |
 
 Earlier arc: the same lab measured the *visual* channel (images into the vision
 tower) — depth-resolved probes localized where information dies in the encoder
