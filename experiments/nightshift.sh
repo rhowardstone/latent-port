@@ -46,6 +46,10 @@ run scale_s256 runs/scaling/s256_w512.json  visual_encoder.wide_picture --slots 
 run scale_s512 runs/scaling/s512_w1024.json visual_encoder.wide_picture --slots 512 --window 1024 --steps 3000 --batch-size 3
 commit "nightshift: scaling sweep + large-picture extension (256, 512 vectors)"
 
+# LP-4: can one learned latent step skip Δ>1 token-generation steps? (macro-steps)
+run lp4 runs/latent_rollout.json visual_encoder.latent_rollout --deltas 1,2,4,8 --gen-len 48 --train-prompts 300 --steps 2500
+commit "nightshift: LP-4 latent macro-steps"
+
 # 3) biggest lever — receiver LoRA vs frozen at 20 bits/slot
 run receiver_lora runs/receiver_lora.json visual_encoder.receiver_lora --chars 64 --steps 3000
 # 4) bidirectional self-port
