@@ -41,7 +41,10 @@ run scale_s128 runs/scaling/s128_w256.json visual_encoder.wide_picture --slots 1
 run scale_d1   runs/scaling/s32_w32.json   visual_encoder.wide_picture --slots 32 --window 32  --steps 3000
 run scale_d3   runs/scaling/s32_w96.json   visual_encoder.wide_picture --slots 32 --window 96  --steps 3000
 run scale_d4   runs/scaling/s32_w128.json  visual_encoder.wide_picture --slots 32 --window 128 --steps 3000
-commit "nightshift: scaling doubling sweep (coherent-passages fix)"
+# how large can a picture go? push image size to 256 and 512 vectors (2 tok/slot)
+run scale_s256 runs/scaling/s256_w512.json  visual_encoder.wide_picture --slots 256 --window 512  --steps 3000 --batch-size 4
+run scale_s512 runs/scaling/s512_w1024.json visual_encoder.wide_picture --slots 512 --window 1024 --steps 3000 --batch-size 3
+commit "nightshift: scaling sweep + large-picture extension (256, 512 vectors)"
 
 # 3) biggest lever — receiver LoRA vs frozen at 20 bits/slot
 run receiver_lora runs/receiver_lora.json visual_encoder.receiver_lora --chars 64 --steps 3000
