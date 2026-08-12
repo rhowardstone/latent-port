@@ -1,0 +1,27 @@
+{
+  "experiment": "LP-4 latent macro-steps",
+  "model": "Qwen/Qwen3-0.6B",
+  "results": [
+    {
+      "delta": 1,
+      "macro_jump_acc": 0.31159420280406874,
+      "noop_jump_acc": 0.08695652180661757,
+      "noop_next_acc": 0.989130437374115,
+      "state_cosine_h_t_vs_future": 0.7838787585496902,
+      "pred_cosine_vs_future": 0.808926393588384,
+      "recursive_macro_acc": 0.043478260869565216,
+      "train_seconds": 2.330017566680908
+    },
+    {
+      "delta": 4,
+      "macro_jump_acc": 0.19166666517655054,
+      "noop_jump_acc": 0.10416666697710752,
+      "noop_next_acc": 0.9874999970197678,
+      "state_cosine_h_t_vs_future": 0.703554056584835,
+      "pred_cosine_vs_future": 0.6903649667898814,
+      "recursive_macro_acc": 0.13333333333333333,
+      "train_seconds": 1.8574926853179932
+    }
+  ],
+  "reading": "macro_jump_acc >> noop_jump_acc and holding for \u0394>1 => one step skips real computation (temporal abstraction). If macro only beats noop at \u0394=1 => codec, not accelerator. noop_next_acc should be ~1.0 (greedy sanity)."
+}
