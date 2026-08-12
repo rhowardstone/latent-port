@@ -531,6 +531,16 @@ what each is, a load-and-use snippet, and regenerate commands. `peft` added to d
 `wide_picture`/`receiver_lora` now persist their trained bridge/adapter. Every result
 JSON embeds `provenance` (git SHA + CLI args + versions); CI is green.
 
+
+**Large-picture extension (2026-08-12).** Pushed image size past 128: 256 vectors
+(512-tok msg) plateaued flat at 0.26 from step 500 (stuck at warm-start floor — a
+RECIPE limit: batch dropped to 4 for memory, undertrained for the harder task; NOT
+a proven fidelity ceiling), and 512 vectors OOM'd (needed 18.5GB it didn't have —
+a memory limit, needs grad checkpointing / smaller receiver). So clean scaling is
+CONFIRMED to 128 vectors / 256-tok msg (0.91); 256+ hits engineering walls (train
+budget + memory), not a model ceiling. A better-resourced retry (grad accumulation,
+more steps) is needed to find the true limit.
+
 ## 2026-08-11 — Clarification: slot count is a free choice, not a limit (plan change)
 
 Realization (prompted by the user): "16 vectors per picture" was never a ceiling —
