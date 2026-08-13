@@ -33,7 +33,7 @@ import numpy as np
 import torch
 from torch import nn
 
-from .channel_metrics import cluster_bootstrap_ci
+from .channel_metrics import cluster_bootstrap_ci, paired_information_gain
 from .latent_bridge import ABrain, GatherBridge
 from .latent_port import MARKER, PortBatcher, greedy_decode, load_receiver, text_positions
 from .provenance import provenance
@@ -179,6 +179,48 @@ def evaluate_music(model, tokenizer, brain, bridge, batcher, tunes, args, sample
 
 
 @torch.no_grad()
+def measure_delta_i(model, batcher, brain, bridge, tunes, args, samples):
+    """H1's honest adjudicator — BITS, not note-fidelity. Does the vector deliver
+    example-specific musical information, or is the receiver hallucinating a plausible
+    folk tune from its prior? ΔI = (NLL_null - NLL_correct)/ln2 bits/msg, null in
+    {another tune's vectors (deranged), zero}. ΔI>0 with CI clear of 0 => real
+    transmission. Per-slot ΔI is the entropy-fair yardstick to compare music vs text
+    (note-fidelity can rise while bits/slot fall — that's the whole H1 trap)."""
+    import torch.nn.functional as F
+
+    bridge.eval()
+    rng = np.random.default_rng(args.seed + 13)
+    msgs = pick(tunes, args.window, rng, samples, brain)
+    lat = []
+    for m in msgs:
+        with torch.autocast("cuda", dtype=torch.bfloat16, enabled=args.device.startswith("cuda")):
+            lat.append(read_wide(brain, bridge, [m], args.window).float())
+
+    def nll_nats(latents, message):
+        with torch.autocast("cuda", dtype=torch.bfloat16, enabled=args.device.startswith("cuda")):
+            embeds, mask, labels = batcher.training_batch(latents, [message])
+            out = model(inputs_embeds=embeds, attention_mask=mask,
+                        position_ids=text_positions(1, embeds.shape[1], embeds.device))
+        logits = out.logits[:, :-1, :].reshape(-1, out.logits.shape[-1]).float()
+        return float(F.cross_entropy(logits, labels[:, 1:].reshape(-1), ignore_index=-100, reduction="sum"))
+
+    zero = torch.zeros_like(lat[0])
+    nc = np.array([nll_nats(lat[i], m) for i, m in enumerate(msgs)])
+    nd = np.array([nll_nats(lat[(i + 1) % len(msgs)], m) for i, m in enumerate(msgs)])  # deranged
+    nz = np.array([nll_nats(zero, m) for m in msgs])
+    ln2 = float(np.log(2))
+    gd, gz = (nd - nc) / ln2, (nz - nc) / ln2
+    bridge.train()
+    return {
+        "samples": len(msgs),
+        "vs_deranged": {**paired_information_gain(nc, nd), "ci": cluster_bootstrap_ci(gd, seed=args.seed),
+                        "bits_per_slot": float(gd.mean() / args.slots)},
+        "vs_zero": {**paired_information_gain(nc, nz), "ci": cluster_bootstrap_ci(gz, seed=args.seed),
+                    "bits_per_slot": float(gz.mean() / args.slots)},
+    }
+
+
+@torch.no_grad()
 def copy_control(model, tokenizer, tunes, args, samples):
     """Frozen prior's ceiling: give the ABC as LITERAL TEXT in the prompt and ask it
     to echo. If this is low, the receiver can't read ABC at all and we need a LoRA."""
@@ -297,10 +339,12 @@ def main() -> None:
             print(f"interim: {json.dumps(interim[-1])}", flush=True)
 
     final = evaluate_music(model, tokenizer, brain, bridge, batcher, val, args, args.eval_samples)
+    delta_i = measure_delta_i(model, batcher, brain, bridge, val, args, min(64, args.eval_samples))
     result = {"experiment": "LP-6 music port (IrishMAN ABC through frozen receiver)",
               "provenance": provenance(args), "slots": args.slots, "window": args.window,
               "tokens_per_slot": args.window / args.slots, "copy_control": cc,
-              "interim_evals": interim, "final": final, "train_seconds": time.monotonic() - started}
+              "interim_evals": interim, "final": final, "delta_i": delta_i,
+              "train_seconds": time.monotonic() - started}
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, indent=2) + "\n")
     bdir = args.output.parent / "bridges"; bdir.mkdir(parents=True, exist_ok=True)
@@ -310,6 +354,10 @@ def main() -> None:
     print("=== LP-6 music verdict ===", flush=True)
     print(f"  copy-control pitch_fid {cc['pitch_fid']:.3f} | port pitch_fid {final['pitch_fid']['mean']:.3f} "
           f"note_f1 {final['note_f1']:.3f} hist_cos {final['hist_cos']:.3f} transpose {final['transpose_fid']:.3f}", flush=True)
+    dd = delta_i["vs_deranged"]
+    print(f"  ΔI vs deranged: {dd['delta_i_bits_per_message_mean']:.1f} bits/msg "
+          f"({dd['bits_per_slot']:.2f} bits/slot, frac+ {dd['fraction_positive']:.2f}, "
+          f"CI[{dd['ci']['lo']:.1f},{dd['ci']['hi']:.1f}]) — >0 clear of 0 == real transmission, not prior hallucination", flush=True)
     print(json.dumps({k: v for k, v in result.items() if k != "provenance"}, sort_keys=True), flush=True)
 
 
