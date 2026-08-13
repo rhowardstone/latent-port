@@ -1,0 +1,101 @@
+{
+  "experiment": "wide picture (single contiguous block)",
+  "provenance": {
+    "git_sha": "44d4e85b322f4cc2296fb3066399e5a02bbc184e",
+    "timestamp_utc": "2026-08-13T05:20:57.415279+00:00",
+    "argv": [
+      "/atb-data/rye/Visual-encoder/visual_encoder/wide_picture.py",
+      "--slots",
+      "256",
+      "--window",
+      "512",
+      "--batch-size",
+      "16",
+      "--warmstart-steps",
+      "1000",
+      "--steps",
+      "4000",
+      "--eval-every",
+      "500",
+      "--output",
+      "runs/scaling/s256_w512_v2.json"
+    ],
+    "cli_args": {
+      "receiver": "Qwen/Qwen3-VL-2B-Instruct",
+      "sender": "Qwen/Qwen3-4B",
+      "slots": 256,
+      "window": 512,
+      "steps": 4000,
+      "warmstart_steps": 1000,
+      "batch_size": 16,
+      "lr": 0.001,
+      "warmup": 50,
+      "eval_every": 500,
+      "eval_samples": 48,
+      "seed": 20260819,
+      "device": "cuda",
+      "grad_checkpointing": false,
+      "output": "runs/scaling/s256_w512_v2.json"
+    },
+    "versions": {
+      "python": "3.12.2",
+      "torch": "2.9.0+cu128",
+      "transformers": "4.57.6",
+      "numpy": "1.26.4",
+      "datasets": "4.2.0"
+    }
+  },
+  "slots": 256,
+  "window": 512,
+  "tokens_per_slot": 2.0,
+  "interim_evals": [
+    {
+      "step": 500,
+      "exact": 0.0,
+      "fid": 0.7259712076719707
+    },
+    {
+      "step": 1000,
+      "exact": 0.0,
+      "fid": 0.916285544998964
+    },
+    {
+      "step": 1500,
+      "exact": 0.0,
+      "fid": 0.9408848002414943
+    },
+    {
+      "step": 2000,
+      "exact": 0.0625,
+      "fid": 0.956865194394217
+    },
+    {
+      "step": 2500,
+      "exact": 0.0,
+      "fid": 0.9595554797648815
+    },
+    {
+      "step": 3000,
+      "exact": 0.0,
+      "fid": 0.9598601365017123
+    },
+    {
+      "step": 3500,
+      "exact": 0.0,
+      "fid": 0.9582063309460717
+    }
+  ],
+  "final": {
+    "samples": 48,
+    "exact_rate": 0.0,
+    "char_fidelity": {
+      "mean": 0.9593921670244953,
+      "lo": 0.9536028635575954,
+      "hi": 0.9648556388724072,
+      "n": 48,
+      "n_boot": 2000,
+      "bootstrap_seed": 20260819
+    }
+  },
+  "train_seconds": 15979.299054081086
+}
