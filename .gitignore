@@ -4,3 +4,5 @@ __pycache__/
 runs/feature_cache/
 runs/**/*.pt
 runs/*.log
+.nightshift2.lock
+runs/.nightshift2.lock
