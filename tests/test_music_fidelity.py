@@ -14,7 +14,8 @@ TUNE = H + "|: G2 AB c2 BA | G2 E2 C4 :|"
 
 def test_identical_is_perfect():
     f = music_fidelity(TUNE, TUNE)
-    assert f["pitch_fid"] == 1.0 and f["note_f1"] == 1.0 and f["hist_cos"] == 1.0
+    assert f["pitch_fid"] == 1.0 and f["note_f1"] == 1.0
+    assert f["hist_cos"] == pytest.approx(1.0)  # cosine has a 1e-9 denom guard
 
 
 def test_reorder_keeps_content_but_loses_order():
