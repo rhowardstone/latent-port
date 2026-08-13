@@ -110,11 +110,19 @@ def main() -> None:
     p.add_argument("--eval-samples", type=int, default=48)
     p.add_argument("--seed", type=int, default=20260819)
     p.add_argument("--device", default="cuda")
+    p.add_argument("--grad-checkpointing", action="store_true",
+                   help="checkpoint the frozen receiver's activations — fits big pictures "
+                        "(e.g. 512 slots / 1024-tok window) at ~2x recompute cost")
     p.add_argument("--output", type=Path, default=Path("runs/wide_picture.json"))
     args = p.parse_args()
 
     torch.manual_seed(args.seed)
     model, tokenizer = load_receiver(args.receiver, args.device)
+    if args.grad_checkpointing:
+        # we inject inputs_embeds (require grad from the bridge) into a frozen model;
+        # non-reentrant checkpointing backprops through to them without storing every
+        # layer's activations — the fix for the single-message OOM at 512 slots.
+        model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
     brain = ABrain(args.sender, args.device)
     d_model = model.get_input_embeddings().weight.shape[1]
     embed_rms = model.get_input_embeddings().weight.detach().float().pow(2).mean().sqrt().item()
