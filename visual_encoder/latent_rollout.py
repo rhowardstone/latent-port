@@ -65,23 +65,39 @@ def decode_state(m, h):
 
 
 @torch.no_grad()
-def teacher_states(m, tok, prompts, gen_len, device):
+def teacher_states(m, tok, prompts, gen_len, device, abc=False):
     """Generate greedily, then one forward with hidden states over the generated region.
-    Returns list of (H [L,d] last-layer states, toks [L+1] the generated token ids)."""
-    out = []
+    Returns (seqs, mean_entropy_nats, abc_valid_fraction) where seqs is a list of
+    (H [L,d] last-layer states, toks [L] the generated token ids). Entropy of the
+    teacher's own next-token distribution is the H2 control: music must beat text at
+    MATCHED entropy, else it's just winning by being low-entropy/repetitive. abc_valid
+    (only meaningful when abc=True) is the self-diagnostic — if the model can't even
+    generate parseable ABC, the H2 test is vacuous on this model."""
+    out, ents, valid = [], [], []
     for p in prompts:
         ids = tok(p, return_tensors="pt", truncation=True, max_length=64).input_ids.to(device)
         gen = m.generate(ids, attention_mask=torch.ones_like(ids), max_new_tokens=gen_len,
                          do_sample=False, pad_token_id=tok.pad_token_id)
         full = gen[0]
-        hs = m(full.unsqueeze(0), output_hidden_states=True).hidden_states[-1][0]  # [S, d]
+        fwd = m(full.unsqueeze(0), output_hidden_states=True)
+        hs = fwd.hidden_states[-1][0]        # [S, d]
         start = ids.shape[1] - 1  # position whose state predicts the 1st generated token
         H = hs[start:-1]                     # states h_t over generated region
         toks = full[ids.shape[1]:]           # the tokens they predict (t+1)
+        lp = torch.log_softmax(fwd.logits[0][start:-1].float(), dim=-1)
+        ent = float((-(lp.exp() * lp).sum(-1)).mean())      # mean next-token entropy (nats)
         n = min(H.shape[0], toks.shape[0])
         if n >= 2:
-            out.append((H[:n].float(), toks[:n]))
-    return out
+            out.append((H[:n].float(), toks[:n])); ents.append(ent)
+            if abc:
+                from .music_port import parse_pitches
+                ps = parse_pitches(tok.decode(full, skip_special_tokens=True))[0]
+                # diversity-aware: alphabet-runs (music21 C-fallback) and degenerate loops
+                # collapse to 1-2 distinct pitches — real ABC has many. Reject those.
+                valid.append(1 if (len(ps) >= 6 and len(set(ps)) >= 4) else 0)
+    return (out,
+            float(np.mean(ents)) if ents else 0.0,
+            float(np.mean(valid)) if valid else 0.0)
 
 
 def main() -> None:
@@ -96,6 +112,9 @@ def main() -> None:
     ap.add_argument("--lr", type=float, default=3e-4)
     ap.add_argument("--seed", type=int, default=20260812)
     ap.add_argument("--device", default="cuda")
+    ap.add_argument("--music", action="store_true",
+                    help="H2: teacher-generate ABC melodies (IrishMAN openings) instead of "
+                         "wikitext — does the macro-step chain better on the musical manifold?")
     ap.add_argument("--output", type=Path, default=Path("runs/latent_rollout.json"))
     args = ap.parse_args()
 
@@ -103,15 +122,26 @@ def main() -> None:
     m, tok = load_lm(args.model, args.device)
     d = m.config.hidden_size
 
-    from datasets import load_dataset
-    rows = [" ".join(r.split()) for r in load_dataset("wikitext", "wikitext-2-raw-v1", split="train")["text"]
-            if 60 < len(r) < 240 and not r.startswith("=")]
     rng = np.random.default_rng(args.seed)
-    tr_prompts = [rows[i] for i in rng.choice(len(rows), args.train_prompts, replace=False)]
-    va_prompts = [rows[i] for i in rng.choice(len(rows), args.val_prompts, replace=False)]
-    print(f"collecting teacher states ({args.model}, gen_len {args.gen_len})...", flush=True)
-    train_seqs = teacher_states(m, tok, tr_prompts, args.gen_len, args.device)
-    val_seqs = teacher_states(m, tok, va_prompts, args.gen_len, args.device)
+    if args.music:
+        from .music_port import ABrainless, load_abc_corpus
+        train, val = load_abc_corpus(ABrainless(tok), 96, 4000, 400, args.seed)
+        # prompt = header + a few opening tokens so the model continues IN ABC
+        def opening(abc):
+            return tok.decode(tok(abc, add_special_tokens=False).input_ids[:18], skip_special_tokens=True)
+        tr_prompts = [opening(train[i]) for i in rng.choice(len(train), args.train_prompts, replace=(len(train) < args.train_prompts))]
+        va_prompts = [opening(val[i]) for i in rng.choice(len(val), args.val_prompts, replace=(len(val) < args.val_prompts))]
+    else:
+        from datasets import load_dataset
+        rows = [" ".join(r.split()) for r in load_dataset("wikitext", "wikitext-2-raw-v1", split="train")["text"]
+                if 60 < len(r) < 240 and not r.startswith("=")]
+        tr_prompts = [rows[i] for i in rng.choice(len(rows), args.train_prompts, replace=False)]
+        va_prompts = [rows[i] for i in rng.choice(len(rows), args.val_prompts, replace=False)]
+    print(f"collecting teacher states ({args.model}, gen_len {args.gen_len}, music={args.music})...", flush=True)
+    train_seqs, tr_ent, tr_valid = teacher_states(m, tok, tr_prompts, args.gen_len, args.device, abc=args.music)
+    val_seqs, va_ent, va_valid = teacher_states(m, tok, va_prompts, args.gen_len, args.device, abc=args.music)
+    print(f"teacher entropy: train {tr_ent:.2f} nats ({tr_ent/0.6931:.2f} bits), "
+          f"ABC-valid frac {tr_valid:.2f} (music only)", flush=True)
 
     results = []
     for delta in [int(x) for x in args.deltas.split(",")]:
@@ -179,16 +209,28 @@ def main() -> None:
         print(json.dumps(results[-1]), flush=True)
 
     verdict = {
-        "experiment": "LP-4 latent macro-steps",
+        "experiment": "LP-4 latent macro-steps" + (" (MUSIC / H2)" if args.music else ""),
         "model": args.model,
+        "domain": "music-abc" if args.music else "wikitext",
+        "teacher_entropy_nats": {"train": tr_ent, "val": va_ent},
+        "teacher_entropy_bits": {"train": tr_ent / 0.69314718, "val": va_ent / 0.69314718},
+        "abc_valid_fraction": {"train": tr_valid, "val": va_valid},
         "results": results,
         "reading": "macro_jump_acc >> noop_jump_acc and holding for Δ>1 => one step skips real "
                    "computation (temporal abstraction). If macro only beats noop at Δ=1 => codec, not accelerator. "
                    "noop_next_acc should be ~1.0 (greedy sanity).",
+        "h2_reading": ("MUSIC vs TEXT: compare recursive_macro_acc to the wikitext run AT MATCHED "
+                       "teacher_entropy_bits. Music 'resists drift' only if it beats text at equal entropy AND "
+                       "beats its own noop at Δ>=4. If abc_valid_fraction is low, the base model can't generate "
+                       "ABC and the H2 test is vacuous — rerun with a music-capable model." if args.music else
+                       "text baseline; run with --music for the H2 comparison."),
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(verdict, indent=2) + "\n")
-    print("=== LP-4 verdict ===", flush=True)
+    print("=== LP-4 verdict" + (" (MUSIC/H2)" if args.music else "") + " ===", flush=True)
+    if args.music:
+        print(f"  teacher entropy {va_ent/0.6931:.2f} bits/tok | ABC-valid {va_valid:.2f} "
+              f"({'OK' if va_valid > 0.5 else 'LOW — model barely generates ABC, H2 may be vacuous'})", flush=True)
     for r in results:
         print(f"  Δ={r['delta']}: macro {r['macro_jump_acc']:.3f} vs noop {r['noop_jump_acc']:.3f} "
               f"(state cos {r['state_cosine_h_t_vs_future']:.2f}, recursive {r['recursive_macro_acc']:.3f})", flush=True)
