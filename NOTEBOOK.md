@@ -663,3 +663,33 @@ Coconut/CALM literature warned of: text tokens act as error-correcting repeaters
 a pure-latent chain lacks. So the honest answer to "just emit vectors and skip
 generation" is: one hop is real but weak, and it doesn't compound into a rollout.
 A weak accelerator / lossy codec, not strong temporal abstraction.
+
+## 2026-08-12 — LP-6: music through the port (IrishMAN ABC) — built, H1 queued, H2 blocked
+
+**Idea (lab lead).** Transmit music through the latent port. Permissively-trainable
+(IrishMAN: 216k folk tunes, MIT/believed-PD, already in ABC notation). Two hypotheses:
+H1 more bits ride through via music than text; H2 latent rollout (LP-4) chains better on
+music (a strong musical prior resists the analog drift that killed text rollout).
+
+**Built & CPU-validated (`visual_encoder/music_port.py`, `latent_rollout.py --music`).**
+- Serialization = **ABC notation** — the one music text-format a web-trained LM has a
+  prior for (cf. ChatMusician). Frozen Qwen3-VL-2B re-emits the ABC injected as k vectors.
+- Metric parses both sides to note events (music21) and reports, separately: order-aware
+  **pitch fidelity**, content-only **pitch-class histogram cosine** (catches the "generic
+  plausible melody" failure the way `content_vs_order` catches order-loss at 20 bits/slot),
+  note-F1, transpose-aligned (wrong key ≠ garbled). Validated on known cases + `pytest`.
+- **ΔI causal control** (vs deranged tune / zero) built in — the *honest* H1 adjudicator,
+  because music's redundancy means note-fidelity can RISE while Shannon bits/slot FALL.
+  H1 is "true" only if music wins on ΔI/slot, not on note-F1.
+- Fix worth recording: ABC is line-oriented; collapsing to one line (the prose habit) makes
+  music21 parse **zero** notes. Keep the newlines.
+
+**H1 status:** queued behind the large-picture retries (`nightshift3_music.sh`, waits for
+the GPU). A `copy_control` (frozen model echoes literal ABC) will tell us if the receiver
+can read ABC at all or needs a receiver-LoRA.
+
+**H2 blocked — honest finding (CPU probe).** Base Qwen3-0.6B **cannot generate real ABC**:
+it degenerates to alphabet runs (`e2 f2 g2 h2 i2…`, past 'g' these aren't ABC notes —
+music21 silently assumes C) or literal repeats (`|: G2G B2B` ad infinitum). So H2 on a base
+model is vacuous — it needs a music-trained model (ChatMusician-7B). The `--music` code is
+ready and self-diagnoses via `abc_valid_fraction`; H2 deferred until that model is pulled.

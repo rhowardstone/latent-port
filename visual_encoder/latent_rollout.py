@@ -92,9 +92,9 @@ def teacher_states(m, tok, prompts, gen_len, device, abc=False):
             if abc:
                 from .music_port import parse_pitches
                 ps = parse_pitches(tok.decode(full, skip_special_tokens=True))[0]
-                # diversity-aware: alphabet-runs (music21 C-fallback) and degenerate loops
-                # collapse to 1-2 distinct pitches — real ABC has many. Reject those.
-                valid.append(1 if (len(ps) >= 6 and len(set(ps)) >= 4) else 0)
+                # diversity-aware: alphabet-runs (music21 C-fallback ~3-4 distinct) and
+                # degenerate loops (1-2 distinct) fall short of a real tune's ~8 distinct.
+                valid.append(1 if (len(ps) >= 8 and len(set(ps)) >= 6) else 0)
     return (out,
             float(np.mean(ents)) if ents else 0.0,
             float(np.mean(valid)) if valid else 0.0)
